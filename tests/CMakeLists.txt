@@ -34,7 +34,7 @@ set_tests_properties(pgm2pbm PROPERTIES FIXTURES_REQUIRED T1 FIXTURES_SETUP T2)
 add_test(NAME tpgm2pbm
          WORKING_DIRECTORY tests
          COMMAND tpgm2pbm
-         PROPERTIES FIXTURES_REQUIRED T1)
+         PROPERTIES FIXTURES_REQUIRED T2)
 
 add_test(NAME colorbar
          WORKING_DIRECTORY tests

@@ -3,20 +3,45 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
+        // Clean
         {
-            "label": "build",
+            "label": "cmake clean",
             "type": "shell",
-            "command": "cmake --build build",
+            "command": "rm",
+            "args": [
+                "-r",
+                "build",
+            ],
+        },
+        // Configure
+        {
+            "label": "cmake configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                ".",
+                "-B",
+                "build",
+            ],
+            // "dependsOn": "cmake clean",
+        },
+        // Build
+        {
+            "label": "cmake build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "build",
+                "-j10",
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "dependsOn": "cmake configure"
         },
-        {
-            "label": "cmake",
-            "type": "shell",
-            "command": "cmake -S . -B build"
-        },
+        // Test
         {
             "label": "test",
             "type": "shell",
@@ -32,12 +57,7 @@
                 "kind": "test",
                 "isDefault": true
             },
-            "dependsOn": "build",
+            "dependsOn": "cmake build",
         },
-        {
-            "label": "clean",
-            "type": "shell",
-            "command": "rm -r build"
-        }
     ]
 }
