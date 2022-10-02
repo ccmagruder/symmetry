@@ -1,0 +1,74 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        // Clean
+        {
+            "label": "cmake clean",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-r",
+                "build",
+            ],
+        },
+        // Configure
+        {
+            "label": "cmake configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                ".",
+                "-B",
+                "build",
+            ],
+            "dependsOn": "cmake clean",
+        },
+        // Build
+        {
+            "label": "cmake build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "build",
+                "-j10",
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": "cmake configure"
+        },
+        // Build and Test / Build
+        {
+            "label": "cmake build for test",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "build",
+                "-j10",
+            ],
+        },
+        // Build and Test / Test
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "ctest",
+            "args": [
+                "--rerun-failed",
+                "--output-on-failure",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build",
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": "cmake build for test",
+        },
+    ]
+}
