@@ -1,0 +1,154 @@
+// - - - - - - - - - - - - - - - - - -
+
+// Listing items – portfolio + blog
+
+// - - - - - - - - - - - - - - - - - -
+
+.listing {
+	padding: 0 $grid-spacing/2;
+	margin-top: -$grid-spacing/2;
+}
+
+.listing-wrap {
+	
+}
+
+.listing-item {
+	position: relative;
+	padding: $grid-spacing/2;
+	float: left;
+	width: 50%;
+
+	@include mq(tabletl) {
+		width: 33.33%;
+	}
+
+	@include mq(desktop) {
+		width: 25%;
+	}
+}
+
+.listing-item__link {
+	position: relative;
+	display: block;
+
+	@include mq(tabletl) {
+
+		&:hover {
+
+			.listing-item__content {
+				opacity: 1;
+				visibility: visible;
+			}
+
+			.listing-item__info {
+				opacity: 1;
+				@include translate(0,0);
+			}
+		}
+	}
+}
+
+.listing-item__image {
+	width: 100%;
+}
+
+.listing-item__content {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	padding: 17px 20px;
+	background: rgba($overlay-background-color, $overlay-opacity);
+
+	opacity: 0;
+	visibility: hidden;
+	@include transition(all 0.3s ease-in-out);
+}
+
+.listing-item__content--top {
+	align-items: top;
+}
+
+.listing-item__content--bottom {
+	align-items: flex-end;
+}
+
+.listing-item__content--center {
+	align-items: center;
+	justify-content: center;
+
+	.listing-item__info {
+		text-align: center;
+	}
+}
+
+.listing-item__info {
+	opacity: 0;
+	@include translate(0,10px);
+	@include transition(all 0.3s ease-in-out);
+}
+
+.listing-item__title {
+	color: $overlay-text-color;
+	font-size: $grid-item-title-small;
+	font-weight: $grid-item-title-weight;
+	letter-spacing: $grid-item-title-spacing;
+
+	@include mq(tabletp) {
+		font-size: $grid-item-title-medium;
+	}
+
+	@include mq(laptop) {
+		font-size: $grid-item-title-large;
+	}
+}
+
+.listing-item__subtitle {
+	margin-top: 5px;
+	color: rgba($overlay-text-color, 0.7);
+	font-size: $grid-item-subtitle-small;
+	font-weight: $grid-item-subtitle-weight;
+	letter-spacing: $grid-item-subtitle-spacing;
+
+	@include mq(tabletp) {
+		font-size: $grid-item-subtitle-medium;
+	}
+
+	@include mq(laptop) {
+		font-size: $grid-item-subtitle-large;
+	}
+}
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Pagination
+
+.pagination {
+	margin-top: $grid-spacing/2;
+	padding: 0 $grid-spacing;
+}
+
+.pagination__prev,
+.pagination__next {
+	width: calc(50vw - #{$grid-spacing*1.5});
+	text-align: center;
+	pointer-events: none;
+	opacity: 0.2;
+	@include transition(background-color 0.15s ease-in-out);
+
+	&.pagination--on {
+		opacity: 1;
+		pointer-events: auto;
+	}
+}
+
+.pagination__prev {
+	float: left;
+}
+
+.pagination__next {
+	float: right;
+}

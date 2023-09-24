@@ -1,6 +1,9 @@
-*.pgm
-*.pbm
+*.ppm
+*.dat
 *.icloud
 .DS_Store
 .idea
 build
+build-*
+_site
+

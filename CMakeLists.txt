@@ -1,26 +1,28 @@
-cmake_minimum_required(VERSION 3.19)
+# Copyright 2022 Caleb Magruder
+
+cmake_minimum_required(VERSION 3.22)
 project(Symmetry)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
-include_directories(src)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_CPPLINT "cpplint;--quiet;--filter=-build/include_subdir;--exclude=${CMAKE_BINARY_DIR}/*")
+    set(CMAKE_CXX_CPPCHECK "cppcheck;--quiet;--suppress=*:${CMAKE_BINARY_DIR}/*")
+endif()
 
 add_subdirectory(config)
 add_subdirectory(images)
-add_subdirectory(src)
-add_subdirectory(tests)
+add_subdirectory(lib)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(tests)
+endif()
 add_subdirectory(extern)
 
-add_executable(symmetry src/symmetry.cpp)
-add_executable(pgm2pbm src/pgm2pbm.cpp)
-add_executable(colorbar src/colorbar.cpp)
-add_executable(cui src/cui.cpp)
+add_executable(symmetry src/Symmetry.cpp)
 
-target_link_libraries(symmetry SymmetryLib)
-target_link_libraries(pgm2pbm SymmetryLib)
-target_link_libraries(colorbar SymmetryLib)
-target_link_libraries(cui SymmetryLib ncurses)
+target_link_libraries(symmetry Symmetry)
 
-install(TARGETS symmetry)
-
-enable_testing()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    enable_testing()
+endif()

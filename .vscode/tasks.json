@@ -2,15 +2,27 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "options": {
+        "env": {
+            "GTEST_COLOR": 1
+        }
+    },
     "tasks": [
         // Clean
         {
             "label": "cmake clean",
             "type": "shell",
-            "command": "rm",
+            "command": "[",
             "args": [
+                "-d",
+                "build-devcontainer",
+                "]",
+                "&&",
+                "rm",
                 "-r",
-                "build",
+                "build-devcontainer",
+                "||",
+                "echo",
             ],
         },
         // Configure
@@ -21,7 +33,8 @@
             "args": [
                 ".",
                 "-B",
-                "build",
+                "build-devcontainer",
+                "-DCMAKE_BUILD_TYPE=Debug",
             ],
             "dependsOn": "cmake clean",
         },
@@ -32,15 +45,29 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "build",
+                "build-devcontainer",
                 "-j10",
             ],
+            "dependsOn": "cmake configure",
+        },
+        // Test
+        {
+            "label": "cmake test",
+            "type": "shell",
+            "command": "ctest",
+            "args": [
+                "--rerun-failed",
+                "--output-on-failure",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build-devcontainer",
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "dependsOn": "cmake configure"
-        },
+            "dependsOn": "cmake build",
+        }
         // Build and Test / Build
         {
             "label": "cmake build for test",
@@ -48,7 +75,7 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "build",
+                "build-devcontainer",
                 "-j10",
             ],
         },
@@ -62,7 +89,7 @@
                 "--output-on-failure",
             ],
             "options": {
-                "cwd": "${workspaceFolder}/build",
+                "cwd": "${workspaceFolder}/build-devcontainer",
             },
             "group": {
                 "kind": "test",

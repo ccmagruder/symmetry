@@ -1,0 +1,16 @@
+{
+    "lambda" : 1.5,
+    "alpha" : -1,
+    "beta" : 0.1,
+    "gamma" : -0.805,
+    "omega" : 0,
+    "n" : 3,
+    "delta" : 0,
+    "p" : 0,
+    "scale" : 0.68,
+    "n_iter" : 1e7,
+    "resx" : 2560,
+    "resy" : 1600,
+    "label" : "5.16",
+    "description" : "D3 Trinity in Red"
+}

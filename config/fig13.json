@@ -1,0 +1,16 @@
+{
+    "lambda" : -2.42,
+    "alpha" : 1,
+    "beta" : -0.04,
+    "gamma" : 0.14,
+    "omega" : 0,
+    "delta" : 0.088,
+    "n" : 6,
+    "p" : 0,
+    "scale" : 0.52,
+    "n_iter" : 1e7,
+    "resx" : 2560,
+    "resy" : 1600,
+    "label" : "3.17",
+    "description" : "D6 Star of David"
+}

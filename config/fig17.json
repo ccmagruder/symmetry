@@ -1,0 +1,16 @@
+{
+    "lambda" : 2.6,
+    "alpha" : -2,
+    "beta" : 0,
+    "gamma" : -0.5,
+    "omega" : 0,
+    "n" : 5,
+    "delta" : 0,
+    "p" : 0,
+    "scale" : 0.65,
+    "n_iter" : 1e7,
+    "resx" : 2560,
+    "resy" : 1600,
+    "label" : "3.6",
+    "description" : "D5 Pentagon Attractor"
+}

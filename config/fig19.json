@@ -1,0 +1,16 @@
+{
+    "lambda" : 2.409,
+    "alpha" : -2.5,
+    "beta" : 0,
+    "gamma" : 0.9,
+    "omega" : 0,
+    "n" : 23,
+    "delta" : 0,
+    "p" : 0,
+    "scale" : 0.85,
+    "n_iter" : 1e7,
+    "resx" : 2560,
+    "resy" : 1600,
+    "label" : "3.11",
+    "description" : "D23 Kachina Dolls"
+}

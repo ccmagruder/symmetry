@@ -1,0 +1,48 @@
+---
+layout: default
+title: Blog
+description: Board includes a simple blog with pagination.
+featured_image: /images/social.jpg
+---
+
+<section class="listing">
+
+	<div class="content-wrap listing-wrap">
+
+		{% for post in paginator.posts %}
+
+		<article class="listing-item">
+
+			<a class="listing-item__link" href="{{ post.url | relative_url }}">
+
+				<div class="listing-item__image">
+					<img src="{{ post.featured_image | relative_url }}" alt="{{ post.title }}">
+				</div>
+
+				<div class="listing-item__content listing-item__content--{{ site.data.settings.grid_settings.content_alignment }}">
+					<div class="listing-item__info">
+						<h2 class="listing-item__title">{{ post.title }}</h2>
+						<p class="listing-item__subtitle">{{ post.date | date_to_long_string }}</p>
+					</div>
+				</div>
+
+			</a>
+
+		</article>
+
+		{% endfor %}
+
+	</div>
+
+</section>
+
+{% if paginator.total_pages > 1 %}
+
+<section class="pagination">
+
+	<a href="{{ paginator.previous_page_path | relative_url }}" class="button button--large pagination__prev{% if paginator.previous_page %} pagination--on{% endif %}"><i class="fa fa-angle-left" aria-hidden="true"></i> <span>Newer Posts</span></a>
+	<a href="{{ paginator.next_page_path | relative_url }}" class="button button--large pagination__next{% if paginator.next_page %} pagination--on{% endif %}"><span>Older Posts</span> <i class="fa fa-angle-right" aria-hidden="true"></i></a>
+
+</section>
+
+{% endif %}

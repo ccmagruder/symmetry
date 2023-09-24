@@ -1,0 +1,16 @@
+{
+    "lambda" : -2.5,
+    "alpha" : 8,
+    "beta" : -0.7,
+    "gamma" : 1,
+    "omega" : 0,
+    "n" : 9,
+    "delta" : -0.9,
+    "p" : 0,
+    "scale" : 1.2,
+    "n_iter" : 1e7,
+    "resx" : 2560,
+    "resy" : 1600,
+    "label" : "2.5",
+    "description" : "D9 Lace By Nine"
+}
