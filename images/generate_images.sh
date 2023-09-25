@@ -6,5 +6,6 @@ do
     do
         sed "s/1e7/1e$j/" config/fig$i.json > config/fig$i-$j.json
         build/symmetry run config/fig$i-$j.json images/im$i-$j.pgm 2>/dev/null
+        rm config/fig$i-$j.json
     done
 done
