@@ -8,11 +8,18 @@ Reproduced images can be found on this project's site [https://ccmagruder.github
 
 # Installing Symmetry
 
+## Docker Compose
+
+```sh
+docker compose run --rm symmetry
+```
+
+## Building From Source
 ```sh
 git clone https://github.com/ccmagruder/Symmetry.git
 cd Symmetry
-source docker/build.sh
-source docker/run.sh config/fig1.json images/im1-1.pgm
+cmake -DCMAKE_BUILD_TYPE=Release -B build .
+cmake --build build
 ```
 
 ## Screen Resolutions
