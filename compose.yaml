@@ -1,0 +1,7 @@
+services:
+  symmetry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: symmetry
+
