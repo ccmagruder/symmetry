@@ -2,21 +2,21 @@ This project reproduces some of the figures found in "Symmetry in Chaos: A Searc
 
 # Image Gallery
 
-Reproduced images can be found on this project's site [https://ccmagruder.github.io/Symmetry](https://ccmagruder.github.io/Symmetry)
+Reproduced images can be found on this project's site [https://ccmagruder.github.io/symmetry](https://ccmagruder.github.io/symmetry)
 
-[![Image](/SymmetryInChaos.png "Symmetry In Chaos Image")](https://ccmagruder.github.io/Symmetry)
+[![Image](/SymmetryInChaos.png "Symmetry In Chaos Image")](https://ccmagruder.github.io/symmetry)
 
 # Installing Symmetry
 
 ## Docker Compose
 
 ```sh
-docker compose run --rm symmetry symmetry run config/fig1.json images/im1-7.pgm
+docker compose run --rm symmetry symmetry run config/fig1-10.json images/im1-10.pgm
 ```
 
 ## Building From Source
 ```sh
-git clone https://github.com/ccmagruder/Symmetry.git
+git clone https://github.com/ccmagruder/symmetry.git
 cd Symmetry
 cmake -DCMAKE_BUILD_TYPE=Release -B build .
 cmake --build build
