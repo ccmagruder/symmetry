@@ -9,4 +9,5 @@ build/symmetry run config/fig6-11.json images/im6-11.pgm
 build/symmetry run config/fig7-7.json images/im7-7.pgm
 build/symmetry run config/fig7-11.json images/im7-11.pgm
 build/symmetry run config/fig8-7.json images/im8-7.pgm
+build/symmetry run config/fig9-8.json images/9-8.pgm
 
