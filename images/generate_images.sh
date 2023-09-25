@@ -17,4 +17,5 @@ build/symmetry run config/fig13-7.json images/im13-7.pgm
 build/symmetry run config/fig14-7.json images/im14-7.pgm
 build/symmetry run config/fig15-11.json images/im15-11.pgm
 build/symmetry run config/fig16-7.json images/im16-7.pgm
+build/symmetry run config/fig17-11.json images/im17-11.pgm
 
