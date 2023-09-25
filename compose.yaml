@@ -4,4 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: symmetry
+    volumes:
+      - ./config:/mnt/config
+      - ./images:/mnt/images
+    working_dir: /mnt
 
