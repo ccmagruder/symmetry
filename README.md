@@ -11,7 +11,7 @@ Reproduced images can be found on this project's site [https://ccmagruder.github
 ## Docker Compose
 
 ```sh
-docker compose run --rm symmetry
+docker compose run --rm symmetry symmetry run config/fig1.json images/im1-7.pgm
 ```
 
 ## Building From Source
