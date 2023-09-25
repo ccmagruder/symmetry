@@ -8,9 +8,9 @@
     "delta" : 0,
     "p" : 0,
     "scale" : 0.68,
-    "n_iter" : 1e7,
-    "resx" : 2560,
-    "resy" : 1600,
+    "n_iter" : 2e7,
+    "resx" : 3140,
+    "resy" : 2160,
     "label" : "5.16",
     "description" : "D3 Trinity in Red"
 }
