@@ -23,4 +23,5 @@ build/symmetry run config/fig19-11.json images/im19-11.pgm
 build/symmetry run config/fig20-11.json images/im20-11.pgm
 build/symmetry run config/fig21-7.json images/im21-7.pgm
 build/symmetry run config/fig22-11.json images/im22-11.pgm
+build/symmetry run config/fig23-7.json images/im23-7.pgm
 
