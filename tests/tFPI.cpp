@@ -25,38 +25,3 @@ TEST(tFPI, Write) {
     Image<uint16_t, 1> im("images/tFPI_Write.pgm");
     std::remove("images/tFPI_Write.pgm");
 }
-
-TEST(tFPI, SaveLoad) {
-    Param p("config/test_iter10.json");
-    p.resy = 1;
-    p.resx = 1;
-    FPI fpi(p);
-    fpi.run_fpi(100);
-    fpi.save();
-    FPI fpi2 = FPI::load(p);
-    EXPECT_EQ(fpi, fpi2);
-}
-
-TEST(tFPI, SaveProgress) {
-    Param p("config/test_iter10.json");
-    p.resx = 20;
-    p.resy = 20;
-
-    std::string filename = FPI::getHashFilename(p);
-    std::remove(filename.c_str());
-
-    FPI fpi1 = FPI::load(p);
-    // Noise is added to fpi every 1000 iterations so, for this test
-    // to pass we need to send multiples of 1000.
-    fpi1.run_fpi(1000);
-    fpi1.save();
-
-    FPI fpi2 = FPI::load(p);
-    fpi2.run_fpi(2000);
-
-    FPI fpi3(p);
-    fpi3.run_fpi(3000);
-
-    EXPECT_NE(fpi1, fpi3);
-    EXPECT_EQ(fpi2, fpi3);
-}

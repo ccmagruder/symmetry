@@ -9,7 +9,6 @@
 FPI::FPI(Param p, const std::string& label)
         : Image(p.resy, p.resx),
           _param(p),
-          _hash(Param::hash(p)),
           _z(0, -0.12),
           _label(label) {
     // Initialize 1e3 transient beginning
@@ -19,30 +18,32 @@ FPI::FPI(Param p, const std::string& label)
 }
 
 std::complex<double> FPI::F(std::complex<double> z) {
-    // std::cerr << real(_z) << "," << imag(_z) << std::endl;
     if (std::isnan(real(_z))) exit(1);
-    std::complex<double> znm1 = z;
+
+    // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
+    this->_znm1 = z;
     for (int i = 1; i < _param.n - 1; i++) {
-        znm1 *= z;
+        this->_znm1 *= z;
     }
 
-    std::complex<double> znew = (
+    this->_znew = (
             _param.lambda
             + _param.alpha * norm(z)
             //+ _param.beta * real(pow(z, _param.n))
-            + _param.beta * real(z*znm1)
+            + _param.beta * real(z*this->_znm1)
             + _param.omega * std::complex<double>(0, 1)
             + _param.delta * std::cos(arg(z) * _param.n * _param.p) * abs(z)
         ) * z                                           // NOLINT
         //+ _param.gamma * pow(conj(z), _param.n - 1);
-        + _param.gamma * conj(znm1);
+        + _param.gamma * conj(this->_znm1);
 
-    if (abs(znew) > 8) {
-        std::cerr << "Warning: abs(z)=" << abs(znew) << " renormalized to 1\n";
-        znew = znew / abs(znew) / static_cast<double>(3);
+    if (abs(this->_znew) > 8) {
+        std::cerr << "Warning: abs(z)=" << abs(this->_znew)
+            << " renormalized to 1\n";
+        this->_znew = this->_znew / abs(this->_znew) / static_cast<double>(3);
     }
 
-    return znew;
+    return this->_znew;
 }
 
 void FPI::run_fpi(uint64_t niter) {
@@ -95,54 +96,4 @@ void FPI::write(const std::string& filename) const {
     // Balance colors by taking logarithm
     im.logRescale();
     im.write(filename);
-}
-
-std::string FPI::getHashFilename(const Param& p) {
-    std::stringstream filename;
-    size_t hash = Param::hash(p);
-    filename << std::hex << hash << ".dat";
-    return filename.str();
-}
-
-FPI FPI::load(const Param& p) {
-    FPI fpi(p);
-
-    std::string filename(FPI::getHashFilename(p));
-    std::ifstream file(filename);
-    // If the file does exist, create new object
-    if (!file.good()) {
-        return fpi;
-    }
-
-    size_t rows, cols;
-    file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
-    file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
-
-    if (fpi.rows() != rows || fpi.cols() != cols) {
-        throw std::runtime_error("FPI::load(Param) invalid rows or cols");
-    }
-    file.read(reinterpret_cast<char*>(fpi._data),
-        rows * cols * fpi.colors() * sizeof(uint64_t));
-
-    double real, imag;
-    file.read(reinterpret_cast<char*>(&real), sizeof(double));
-    file.read(reinterpret_cast<char*>(&imag), sizeof(double));
-    fpi._z = {real, imag};
-    return fpi;
-}
-
-void FPI::save() {
-    std::stringstream ss;
-    ss << std::hex << _hash << ".dat";
-
-    std::ofstream file(ss.str(),
-        std::ios::trunc | std::ios_base::binary);
-    file.write(reinterpret_cast<char*>(&_rows), sizeof(_rows));
-    file.write(reinterpret_cast<char*>(&_cols), sizeof(_cols));
-    file.write(reinterpret_cast<char*>(_data),
-        _rows * _cols * colors() * sizeof(*_data));
-    double real = _z.real(), imag = _z.imag();
-    file.write(reinterpret_cast<char*>(&real), sizeof(double));
-    file.write(reinterpret_cast<char*>(&imag), sizeof(double));
-    file.close();
 }

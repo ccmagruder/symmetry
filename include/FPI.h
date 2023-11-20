@@ -14,8 +14,6 @@ class FPI : public Image<uint64_t, 1>{
 
     ~FPI() {}
 
-    using Image<uint64_t, 1>::operator==;
-
     std::complex<double> F(std::complex<double> z);
 
     void run_fpi(uint64_t niter);
@@ -23,23 +21,17 @@ class FPI : public Image<uint64_t, 1>{
 
     void write(const std::string& filename) const;
 
-    static std::string getHashFilename(const Param& p);
-
     template <typename T>
     static int sgn(T val) {
         return (T(0) < val) - (val < T(0));
     }
 
-    static FPI load(const Param& p);
-
-    void save();
-
  private:
     const Param _param;
 
     std::complex<double> _z;
-
-    const size_t _hash;
+    std::complex<double> _znm1;
+    std::complex<double> _znew;
 
     const std::string _label;
 };

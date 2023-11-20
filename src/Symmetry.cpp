@@ -24,7 +24,6 @@ int main(int argc, char** argv) {
         Param p(filenameConfig);
         FPI im(p, filenameConfig);
         im.run_fpi();
-        im.save();
         im.write(filenameImage);
     } else if (command == "color") {
         std::string filenameColorMap = std::string(argv[2]);
