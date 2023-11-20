@@ -1,0 +1,16 @@
+{
+    "lambda" : 1.455,
+    "alpha" : -1,
+    "beta" : 0.03,
+    "gamma" : -0.8,
+    "omega" : 0,
+    "delta" : 0,
+    "n" : 3,
+    "p" : 0,
+    "scale" : 0.65,
+    "n_iter" : 2e7,
+    "resx" : 3840,
+    "resy" : 2160,
+    "label" : "5.13b",
+    "description" : "D3 IMA Logo 2"
+}

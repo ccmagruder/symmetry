@@ -1,0 +1,16 @@
+{
+    "lambda" : -1.86,
+    "alpha" : 2,
+    "beta" : 0,
+    "gamma" : 1,
+    "omega" : 0.1,
+    "n" : 4,
+    "delta" : 0,
+    "p" : 0,
+    "scale" : 0.83,
+    "n_iter" : 2e7,
+    "resx" : 3840,
+    "resy" : 2160,
+    "label" : "2.3",
+    "description" : "Z4 Swirling Streamers"
+}

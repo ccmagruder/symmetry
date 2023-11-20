@@ -1,0 +1,16 @@
+{
+    "lambda" : -2.225,
+    "alpha" : 1.5,
+    "beta" : -0.014,
+    "gamma" : 0.002,
+    "omega" : 0,
+    "n" : 57,
+    "delta" : -0.02,
+    "p" : 0,
+    "scale" : 0.7,
+    "n_iter" : 2e8,
+    "resx" : 3840,
+    "resy" : 2160,
+    "label" : "3.12",
+    "description" : "D57 Sunflower"
+}

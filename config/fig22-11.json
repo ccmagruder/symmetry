@@ -1,0 +1,16 @@
+{
+    "lambda" : 2.5,
+    "alpha" : -2.5,
+    "beta" : 0,
+    "gamma" : 0.9,
+    "omega" : 0,
+    "n" : 3,
+    "delta" : 0,
+    "p" : 0,
+    "scale" : 0.645,
+    "n_iter" : 2e11,
+    "resx" : 3840,
+    "resy" : 2160,
+    "label" : "5.6",
+    "description" : "D3 Golden Flintstone"
+}
