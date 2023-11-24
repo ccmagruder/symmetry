@@ -19,7 +19,7 @@
                 "]",
                 "&&",
                 "rm",
-                "-r",
+                "-rf",
                 "build-devcontainer",
                 "||",
                 "echo",
