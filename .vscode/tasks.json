@@ -15,12 +15,12 @@
             "command": "[",
             "args": [
                 "-d",
-                "build-devcontainer",
+                "build",
                 "]",
                 "&&",
                 "rm",
                 "-rf",
-                "build-devcontainer",
+                "build",
                 "||",
                 "echo",
             ],
@@ -33,7 +33,7 @@
             "args": [
                 ".",
                 "-B",
-                "build-devcontainer",
+                "build",
                 "-DCMAKE_BUILD_TYPE=Debug",
             ],
             "dependsOn": "cmake clean",
@@ -45,7 +45,7 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "build-devcontainer",
+                "build",
                 "-j10",
             ],
             "dependsOn": "cmake configure",
@@ -60,7 +60,7 @@
                 "--output-on-failure",
             ],
             "options": {
-                "cwd": "${workspaceFolder}/build-devcontainer",
+                "cwd": "${workspaceFolder}/build",
             },
             "group": {
                 "kind": "build",
@@ -75,7 +75,7 @@
             "command": "cmake",
             "args": [
                 "--build",
-                "build-devcontainer",
+                "build",
                 "-j10",
             ],
         },
@@ -89,7 +89,7 @@
                 "--output-on-failure",
             ],
             "options": {
-                "cwd": "${workspaceFolder}/build-devcontainer",
+                "cwd": "${workspaceFolder}/build",
             },
             "group": {
                 "kind": "test",
