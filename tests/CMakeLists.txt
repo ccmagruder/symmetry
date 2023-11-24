@@ -1,16 +1,23 @@
+# Copyright 2023 Caleb Magruder
+
 project(Symmetry)
 
+find_package(GTest REQUIRED)
+include(GoogleTest)
+
 add_executable(tColorMap tColorMap.cpp)
+add_executable(tComplex tComplex.cpp)
 add_executable(tFPI tFPI.cpp)
 add_executable(tImage tImage.cpp)
 add_executable(tParam tParam.cpp)
 add_executable(tPixel tPixel.cpp)
 
-target_link_libraries(tColorMap Symmetry gtest gtest_main)
-target_link_libraries(tFPI Symmetry gtest gtest_main)
-target_link_libraries(tImage Symmetry gtest gtest_main)
-target_link_libraries(tParam Symmetry gtest gtest_main)
-target_link_libraries(tPixel Symmetry gtest gtest_main)
+target_link_libraries(tColorMap Symmetry GTest::gtest GTest::gtest_main)
+target_link_libraries(tComplex Symmetry GTest::gtest GTest::gtest_main)
+target_link_libraries(tFPI Symmetry GTest::gtest GTest::gtest_main)
+target_link_libraries(tImage Symmetry GTest::gtest GTest::gtest_main)
+target_link_libraries(tParam Symmetry GTest::gtest GTest::gtest_main)
+target_link_libraries(tPixel Symmetry GTest::gtest GTest::gtest_main)
 
 add_subdirectory(config)
 add_subdirectory(images)
@@ -20,6 +27,10 @@ enable_testing()
 add_test(NAME tColorMap
          WORKING_DIRECTORY tests
          COMMAND tColorMap)
+
+add_test(NAME tComplex
+         WORKING_DIRECTORY tests
+         COMMAND tComplex)
 
 add_test(NAME tFPI
          WORKING_DIRECTORY tests
