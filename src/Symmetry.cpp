@@ -5,7 +5,7 @@
 
 #include "ColorMap.h"
 #include "Image.hpp"
-#include "FPI.h"
+#include "FPI.hpp"
 
 void print_help() {
     std::cerr << "symmetry run config/*.json images/*.pbm.\n"

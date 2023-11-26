@@ -8,6 +8,7 @@
 #include "Image.hpp"
 #include "Param.h"
 
+template <typename T = std::complex<double>>
 class FPI : public Image<uint64_t, 1>{
  public:
     explicit FPI(Param p, const std::string& label = " FPI ")
@@ -23,7 +24,7 @@ class FPI : public Image<uint64_t, 1>{
 
     ~FPI() {}
 
-    std::complex<double> F(std::complex<double> z) {
+    T F(T z) {
         if (std::isnan(real(_z))) exit(1);
 
         // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
@@ -37,7 +38,7 @@ class FPI : public Image<uint64_t, 1>{
                 + _param.alpha * abs(z) * abs(z)
                 //+ _param.beta * real(pow(z, _param.n))
                 + _param.beta * real(z*this->_znm1)
-                + _param.omega * std::complex<double>(0, 1)
+                + _param.omega * T(0, 1)
                 + _param.delta * cos(arg(z) * _param.n * _param.p) * abs(z)
             ) * z                                           // NOLINT
             //+ _param.gamma * pow(conj(z), _param.n - 1);
@@ -46,7 +47,7 @@ class FPI : public Image<uint64_t, 1>{
         if (abs(this->_znew) > 8) {
             std::cerr << "Warning: abs(z)=" << abs(this->_znew)
                 << " renormalized to 1\n";
-            this->_znew /= abs(this->_znew) / static_cast<double>(3);
+            this->_znew /= abs(this->_znew) / 3.0;
         }
 
         return this->_znew;
@@ -106,17 +107,17 @@ class FPI : public Image<uint64_t, 1>{
         im.write(filename);
     }
 
-    template <typename T>
-    static int sgn(T val) {
-        return (T(0) < val) - (val < T(0));
+    template <typename S>
+    static int sgn(S val) {
+        return (S(0) < val) - (val < S(0));
     }
 
  private:
     const Param _param;
 
-    std::complex<double> _z;
-    std::complex<double> _znm1;
-    std::complex<double> _znew;
+    T _z;
+    T _znm1;
+    T _znew;
 
     const std::string _label;
 };

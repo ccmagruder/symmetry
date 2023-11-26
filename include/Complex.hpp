@@ -8,7 +8,7 @@ class Complex{
     explicit Complex(size_t N) : _N(N) {
         this->_ptr = new T[N];
     }
-    ~Complex(){ delete[] _ptr; }
+    ~Complex() { delete[] _ptr; }
 
     Complex& operator=(const Complex<T>& other) {
         assert(this->_N == other._N);
@@ -34,7 +34,7 @@ class Complex{
         }
         return z;
     }
-    
+
     friend Complex<T> operator*(const Complex<T>& x, const Complex<T>& y) {
         assert(x._N == y._N);
         Complex<T> z(x._N);

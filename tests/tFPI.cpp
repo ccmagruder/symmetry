@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "FPI.h"
+#include "FPI.hpp"
 
 TEST(tFPI, Ctor) {
     Param p("config/test_iter10.json");
