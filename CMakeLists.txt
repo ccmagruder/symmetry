@@ -17,7 +17,6 @@ add_subdirectory(lib)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_subdirectory(tests)
 endif()
-add_subdirectory(extern)
 
 add_executable(symmetry src/Symmetry.cpp)
 

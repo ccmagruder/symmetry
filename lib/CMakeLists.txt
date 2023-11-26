@@ -21,6 +21,10 @@ add_library(Symmetry SHARED
     ${CMAKE_SOURCE_DIR}/src/PBar.cpp
 )
 
-target_include_directories(Symmetry PUBLIC ${CMAKE_SOURCE_DIR}/include)
+find_library(json json)
+find_path(json_INCLUDE JSON.h)
+message(FATAL ${json_INCLUDE})
 
-target_link_libraries(Symmetry JSON)
+target_include_directories(Symmetry PUBLIC ${CMAKE_SOURCE_DIR}/include ${json_INCLUDE})
+
+target_link_libraries(Symmetry ${json})
