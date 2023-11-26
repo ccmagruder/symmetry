@@ -47,7 +47,8 @@ class FPI : public Image<uint64_t, 1>{
                 //+ _param.beta * real(pow(z, _param.n))
                 + this->_beta * real(z*this->_znm1)
                 + this->_omega
-                + T(this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z), 0)
+                + T(this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
+                    0)
             ) * z                                           // NOLINT
             //+ _param.gamma * pow(conj(z), _param.n - 1);
             + this->_gamma * conj(this->_znm1);

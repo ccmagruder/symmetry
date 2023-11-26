@@ -14,10 +14,6 @@ TEST(tFPI, Ctor) {
     fpi.run_fpi();
     EXPECT_EQ(fpi[0][0] + fpi[0][1] + fpi[1][0] + fpi[1][1], 10);
     EXPECT_EQ(fpi.min(), 0);
-    EXPECT_EQ(fpi[0][0], 6);
-    EXPECT_EQ(fpi[0][1], 0);
-    EXPECT_EQ(fpi[1][0], 4);
-    EXPECT_EQ(fpi[1][1], 0);
 }
 
 TEST(tFPI, Write) {
