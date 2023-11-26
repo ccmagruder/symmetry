@@ -16,6 +16,14 @@ class FPI : public Image<uint64_t, 1>{
           _param(p),
           _z(0, -0.12),
           _label(label) {
+        this->_alpha = static_cast<T::value_type>(_param.alpha);
+        this->_beta = static_cast<T::value_type>(_param.beta);
+        this->_delta = static_cast<T::value_type>(_param.delta);
+        this->_gamma = static_cast<T::value_type>(_param.gamma);
+        this->_n = static_cast<T::value_type>(_param.n);
+        this->_p = static_cast<T::value_type>(_param.p);
+        this->_lambda = T(_param.lambda, 0);
+        this->_omega = T(0, _param.omega);
         // Initialize 1e3 transient beginning
         for (int i = 0; i < 1e3; i++) {
             _z = F(_z);
@@ -29,20 +37,20 @@ class FPI : public Image<uint64_t, 1>{
 
         // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
         this->_znm1 = z;
-        for (int i = 1; i < _param.n - 1; i++) {
+        for (int i = 1; i < std::round(this->_n) - 1; i++) {
             this->_znm1 *= z;
         }
 
         this->_znew = (
-                _param.lambda
-                + _param.alpha * abs(z) * abs(z)
+                this->_lambda
+                + this->_alpha * abs(z) * abs(z)
                 //+ _param.beta * real(pow(z, _param.n))
-                + _param.beta * real(z*this->_znm1)
-                + _param.omega * T(0, 1)
-                + _param.delta * cos(arg(z) * _param.n * _param.p) * abs(z)
+                + this->_beta * real(z*this->_znm1)
+                + this->_omega
+                + T(this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z), 0)
             ) * z                                           // NOLINT
             //+ _param.gamma * pow(conj(z), _param.n - 1);
-            + _param.gamma * conj(this->_znm1);
+            + this->_gamma * conj(this->_znm1);
 
         if (abs(this->_znew) > 8) {
             std::cerr << "Warning: abs(z)=" << abs(this->_znew)
@@ -80,7 +88,7 @@ class FPI : public Image<uint64_t, 1>{
                     _z = F(_z);
             }
 
-            int size = std::sqrt(_rows*_cols);
+            double size = std::sqrt(_rows*_cols);
             int c = floor(_param.scale*size/2*real(_z) + _cols/2);
             int r = floor(_param.scale*size/2*imag(_z) + _rows/2);
             if (r >=0 && r < _rows && c >=0 && c < _cols) {
@@ -118,6 +126,14 @@ class FPI : public Image<uint64_t, 1>{
     T _z;
     T _znm1;
     T _znew;
+    T _lambda;
+    T _omega;
+    T::value_type _alpha;
+    T::value_type _beta;
+    T::value_type _delta;
+    T::value_type _gamma;
+    T::value_type _n;
+    T::value_type _p;
 
     const std::string _label;
 };
