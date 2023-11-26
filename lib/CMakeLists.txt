@@ -23,7 +23,6 @@ add_library(Symmetry SHARED
 
 find_library(json json)
 find_path(json_INCLUDE JSON.h)
-message(FATAL ${json_INCLUDE})
 
 target_include_directories(Symmetry PUBLIC ${CMAKE_SOURCE_DIR}/include ${json_INCLUDE})
 

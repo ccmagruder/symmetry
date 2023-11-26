@@ -28,11 +28,11 @@ std::complex<double> FPI::F(std::complex<double> z) {
 
     this->_znew = (
             _param.lambda
-            + _param.alpha * norm(z)
+            + _param.alpha * abs(z) * abs(z)
             //+ _param.beta * real(pow(z, _param.n))
             + _param.beta * real(z*this->_znm1)
             + _param.omega * std::complex<double>(0, 1)
-            + _param.delta * std::cos(arg(z) * _param.n * _param.p) * abs(z)
+            + _param.delta * cos(arg(z) * _param.n * _param.p) * abs(z)
         ) * z                                           // NOLINT
         //+ _param.gamma * pow(conj(z), _param.n - 1);
         + _param.gamma * conj(this->_znm1);
