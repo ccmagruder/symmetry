@@ -250,13 +250,17 @@ std::vector<uint64_t> Image<T, COLORS>::hist() const {
 
 template<typename T, int COLORS>
 void Image<T, COLORS>::logRescale(const double M) {
-    const double coef
-        = std::numeric_limits<T>::max() / std::log2(M * this->max() + 1);
+    if (this->max() == 0) return;
+
+    const long double coef
+        = static_cast<long double>(std::numeric_limits<T>::max())
+            / std::log2(M * static_cast<long double>(this->max()) + 1);
 
     for (ptrdiff_t r = 0; r < _rows; r++) {
         for (ptrdiff_t c = 0; c < _cols; c++) {
             (*this)[r][c] = static_cast<T>(
-                coef * std::log2(M * static_cast<double>((*this)[r][c]) + 1));
+                coef * std::log2(M * static_cast<long double>((*this)[r][c])
+                + 1));
         }
     }
 }

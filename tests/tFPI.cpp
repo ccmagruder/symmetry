@@ -2,11 +2,11 @@
 
 #include "gtest/gtest.h"
 
-#include "FPI.h"
+#include "FPI.hpp"
 
 TEST(tFPI, Ctor) {
     Param p("config/test_iter10.json");
-    FPI fpi(p);
+    FPI<std::complex<float>> fpi(p);
     EXPECT_EQ(fpi.rows(), 2);
     EXPECT_EQ(fpi.cols(), 2);
     EXPECT_EQ(fpi.min(), 0);
