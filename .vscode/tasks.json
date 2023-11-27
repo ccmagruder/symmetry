@@ -35,6 +35,8 @@
                 "-B",
                 "build",
                 "-DCMAKE_BUILD_TYPE=Debug",
+                "-DCMAKE_CXX_COMPILER=/usr/bin/clang++",
+                "-DCMAKE_C_COMPILER=/usr/bin/clang",
             ],
             "dependsOn": "cmake clean",
         },

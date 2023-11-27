@@ -16,12 +16,12 @@ class FPI : public Image<uint64_t, 1>{
           _param(p),
           _z(0, -0.12),
           _label(label) {
-        this->_alpha = static_cast<T::value_type>(_param.alpha);
-        this->_beta = static_cast<T::value_type>(_param.beta);
-        this->_delta = static_cast<T::value_type>(_param.delta);
-        this->_gamma = static_cast<T::value_type>(_param.gamma);
-        this->_n = static_cast<T::value_type>(_param.n);
-        this->_p = static_cast<T::value_type>(_param.p);
+        this->_alpha = static_cast<typename T::value_type>(_param.alpha);
+        this->_beta = static_cast<typename T::value_type>(_param.beta);
+        this->_delta = static_cast<typename T::value_type>(_param.delta);
+        this->_gamma = static_cast<typename T::value_type>(_param.gamma);
+        this->_n = static_cast<typename T::value_type>(_param.n);
+        this->_p = static_cast<typename T::value_type>(_param.p);
         this->_lambda = T(_param.lambda, 0);
         this->_omega = T(0, _param.omega);
         // Initialize 1e3 transient beginning
@@ -129,12 +129,12 @@ class FPI : public Image<uint64_t, 1>{
     T _znew;
     T _lambda;
     T _omega;
-    T::value_type _alpha;
-    T::value_type _beta;
-    T::value_type _delta;
-    T::value_type _gamma;
-    T::value_type _n;
-    T::value_type _p;
+    typename T::value_type _alpha;
+    typename T::value_type _beta;
+    typename T::value_type _delta;
+    typename T::value_type _gamma;
+    typename T::value_type _n;
+    typename T::value_type _p;
 
     const std::string _label;
 };
