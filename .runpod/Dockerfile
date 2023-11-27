@@ -13,6 +13,7 @@ RUN apt-get update \
     && sh cmake-3.27.8-linux-x86_64.sh --prefix=/opt/cmake --skip-license \
     && rm cmake-3.27.8-linux-x86_64.sh \
     && ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake \
+    && ln -s /opt/cmake/bin/ctest /usr/local/bin/ctest \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
         clang \

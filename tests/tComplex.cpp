@@ -1,7 +1,5 @@
 // Copyright 2023 Caleb Magruder
 
-#include <numbers>
-
 #include <complex>
 
 #include "gtest/gtest.h"
@@ -71,8 +69,8 @@ TYPED_TEST(tComplex, Arg) {
     vec1[0] = {-1, 0};
     vec1[1] = {0, -1};
     vec2 = arg(vec1);
-    EXPECT_NEAR(real(vec2[0]), std::numbers::pi, 1e-4);
-    EXPECT_NEAR(real(vec2[1]), -std::numbers::pi/2, 1e-4);
+    EXPECT_NEAR(real(vec2[0]), 3.14159, 1e-4);
+    EXPECT_NEAR(real(vec2[1]), -3.14159/2, 1e-4);
 }
 
 TYPED_TEST(tComplex, Conj) {
@@ -86,8 +84,8 @@ TYPED_TEST(tComplex, Conj) {
 
 TYPED_TEST(tComplex, Cos) {
     Complex<TypeParam> vec1(2), vec2(2);
-    vec1[0] = {std::numbers::pi, 4};
-    vec1[1] = {std::numbers::pi/2, -2};
+    vec1[0] = {3.14159, 4};
+    vec1[1] = {3.14159/2, -2};
     vec2 = cos(vec1);
     EXPECT_NEAR(vec2[0].real(), -1, 1e-4);
     EXPECT_NEAR(vec2[1].real(), 0, 1e-4);
