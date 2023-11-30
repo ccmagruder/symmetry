@@ -90,3 +90,9 @@ TYPED_TEST(tComplex, Cos) {
     EXPECT_NEAR(vec2[0].real(), -1, 1e-4);
     EXPECT_NEAR(vec2[1].real(), 0, 1e-4);
 }
+
+#ifdef CMAKE_CUDA_COMPILER
+TEST(tComplex, CUDA) {
+    cudaHelloCUDA();
+}
+#endif

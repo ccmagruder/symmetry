@@ -89,3 +89,4 @@ class Complex{
     T* _ptr;
 };
 
+void cudaHelloCUDA();

@@ -1,4 +1,4 @@
-# Copyright 2022 Caleb Magruder
+# Copyright 2023 Caleb Magruder
 
 cmake_minimum_required(VERSION 3.22)
 project(Symmetry LANGUAGES CXX)
@@ -26,10 +26,6 @@ endif()
 add_executable(symmetry src/Symmetry.cpp)
 
 target_link_libraries(symmetry Symmetry)
-
-if(CMAKE_CUDA_COMPILER)
-    add_executable(complex src/Complex.cu)
-endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     enable_testing()
