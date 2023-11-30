@@ -10,24 +10,24 @@ template<typename T>
 class Complex{
  public:
     explicit Complex(size_t N) : _N(N) {
-        this->_ptr = new T[N];
+        this->_ptr = reinterpret_cast<void*>(new T[N]);
     }
-    ~Complex() { if (_ptr) delete[] _ptr; }
+    ~Complex() { if (_ptr) delete[] reinterpret_cast<T*>(_ptr); }
 
     Complex& operator=(const Complex<T>& other) {
         assert(this->_N == other._N);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
-            this->_ptr[i] = other[i];
+            this->operator[](i) = other[i];
         }
         return *this;
     }
 
     T& operator[](ptrdiff_t i) {
-        return this->_ptr[i];
+        return reinterpret_cast<T*>(this->_ptr)[i];
     }
 
     const T& operator[](ptrdiff_t i) const {
-        return this->_ptr[i];
+        return reinterpret_cast<T*>(this->_ptr)[i];
     }
 
     friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {
@@ -90,7 +90,7 @@ class Complex{
 
  private:
     size_t _N;
-    T* _ptr;
+    void* _ptr;
 };
 
 template<> Complex<gpuDoubleComplex>::Complex(size_t N);
