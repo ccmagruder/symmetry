@@ -93,6 +93,6 @@ TYPED_TEST(tComplex, Cos) {
 
 #ifdef CMAKE_CUDA_COMPILER
 TEST(tComplex, CUDA) {
-    cudaHelloCUDA();
+    Complex<gpuDoubleComplex> c(1);
 }
 #endif

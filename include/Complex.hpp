@@ -2,13 +2,17 @@
 
 #pragma once
 
+#include <cassert>
+
+enum class gpuDoubleComplex {};
+
 template<typename T>
 class Complex{
  public:
     explicit Complex(size_t N) : _N(N) {
         this->_ptr = new T[N];
     }
-    ~Complex() { delete[] _ptr; }
+    ~Complex() { if (_ptr) delete[] _ptr; }
 
     Complex& operator=(const Complex<T>& other) {
         assert(this->_N == other._N);
@@ -89,4 +93,4 @@ class Complex{
     T* _ptr;
 };
 
-void cudaHelloCUDA();
+template<> Complex<gpuDoubleComplex>::Complex(size_t N);
