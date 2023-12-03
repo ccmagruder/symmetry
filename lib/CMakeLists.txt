@@ -13,23 +13,23 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Pixel.hpp")
 endif()
 
+set(SYMMETRY_SRCS
+    ${CMAKE_SOURCE_DIR}/src/Color.cpp
+    ${CMAKE_SOURCE_DIR}/src/ColorMap.cpp
+    ${CMAKE_SOURCE_DIR}/src/Image.cpp
+    ${CMAKE_SOURCE_DIR}/src/Param.cpp
+    ${CMAKE_SOURCE_DIR}/src/PBar.cpp
+)
+
 if(CMAKE_CUDA_COMPILER)
     add_library(Symmetry SHARED
-        ${CMAKE_SOURCE_DIR}/src/Color.cpp
-        ${CMAKE_SOURCE_DIR}/src/ColorMap.cpp
-        ${CMAKE_SOURCE_DIR}/src/Image.cpp
-        ${CMAKE_SOURCE_DIR}/src/Param.cpp
-        ${CMAKE_SOURCE_DIR}/src/PBar.cpp
+        ${SYMMETRY_SRCS}
         ${CMAKE_SOURCE_DIR}/src/Complex.cu
     )
     target_compile_definitions(Symmetry PUBLIC CMAKE_CUDA_COMPILER)
 else()
     add_library(Symmetry SHARED
-        ${CMAKE_SOURCE_DIR}/src/Color.cpp
-        ${CMAKE_SOURCE_DIR}/src/ColorMap.cpp
-        ${CMAKE_SOURCE_DIR}/src/Image.cpp
-        ${CMAKE_SOURCE_DIR}/src/Param.cpp
-        ${CMAKE_SOURCE_DIR}/src/PBar.cpp
+        ${SYMMETRY_SRCS}
     )
 endif()
 
