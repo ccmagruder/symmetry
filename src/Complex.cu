@@ -12,7 +12,7 @@ __global__ void helloCUDA()
 }
 
 template<>
-Complex<gpuDoubleComplex>::Complex(size_t N) {
+Complex<gpuDoubleComplex>::Complex(size_t N) : _N(N) {
     this->_ptr = reinterpret_cast<void*>(new std::complex<double>[N]);
     helloCUDA<<<1, 1>>>();
     cudaDeviceSynchronize();
