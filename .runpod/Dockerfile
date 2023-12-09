@@ -13,6 +13,7 @@ RUN mkdir -p /workspace \
         cppcheck \
         curl \
         git-lfs \
+        less \
         libgtest-dev \
         make \
         pip \
@@ -40,7 +41,10 @@ RUN mkdir -p /workspace \
     && cd /workspace \
     && git clone https://github.com/ccmagruder/symmetry.git \
     && export GTEST_COLOR=1 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /home/vscode \
+    && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
+    && git config --global core.pager "less -eFiJM~ -j3 --tabs=3"
 
-CMD code --no-sandbox --user-data-dir=/workspace tunnel
+CMD code --no-sandbox --user-data-dir=/root tunnel
 
