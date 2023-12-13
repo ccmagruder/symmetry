@@ -24,16 +24,14 @@ class Complex{
 
  public:
     explicit Complex(size_t N) : _N(N) {
-        this->_ptr = reinterpret_cast<void*>(::operator new(2*N*sizeof(Type)));
+        this->_ptr = ::operator new(2*N*sizeof(Type));
     }
     ~Complex() { if (_ptr) ::operator delete(_ptr); }
 
     Complex<T>& operator=(const Complex<T>& other) {
         assert(this->_N == other._N);
-        Type* ptr
-            = reinterpret_cast<Type*>(this->_ptr);
-        Type* other_ptr
-            = reinterpret_cast<Type*>(other._ptr);
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
         for (ptrdiff_t i = 0; i < 2 * this->_N; i++) {
             *ptr++ = *other_ptr++;
         }
@@ -50,8 +48,9 @@ class Complex{
     }
 
     bool operator==(std::initializer_list<Type> l) const {
+        using Iter = typename std::initializer_list<Type>::const_iterator;
         Type* ptr = reinterpret_cast<Type*>(this->_ptr);
-        for (auto i = l.begin(); i < l.end(); i++) {
+        for (Iter i = l.begin(); i < l.end(); i++) {
             if (*ptr != *i) {
                 return false;
             }
@@ -60,12 +59,12 @@ class Complex{
         return true;
     }
 
-    T& operator[](ptrdiff_t i) {
-        return reinterpret_cast<T*>(this->_ptr)[i];
+    ComplexType& operator[](ptrdiff_t i) {
+        return *(reinterpret_cast<ComplexType*>(this->_ptr) + i);
     }
 
-    const T& operator[](ptrdiff_t i) const {
-        return reinterpret_cast<T*>(this->_ptr)[i];
+    const ComplexType& operator[](ptrdiff_t i) const {
+        return *(reinterpret_cast<const ComplexType*>(this->_ptr) + i);
     }
 
     friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {

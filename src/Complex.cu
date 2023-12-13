@@ -13,7 +13,7 @@ __global__ void helloCUDA()
 
 template<>
 Complex<gpuDouble>::Complex(size_t N) : _N(N) {
-    this->_ptr = reinterpret_cast<void*>(::operator new(2*N*sizeof(Type)));
+    this->_ptr = ::operator new(2*N*sizeof(Type));
     helloCUDA<<<1, 1>>>();
     cudaDeviceSynchronize();
 }

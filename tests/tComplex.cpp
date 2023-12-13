@@ -75,11 +75,10 @@ TYPED_TEST(tComplex, Arg) {
     Complex<TypeParam> vec1(2), vec2(2);
     vec1 = {-1, 0, 0, -1};
     vec2 = arg(vec1);
-    Type* data = reinterpret_cast<Type*>(&vec2[0]);
-    EXPECT_NEAR(data[0], 3.14159, 1e-4);
-    EXPECT_EQ(data[1], 0);
-    EXPECT_NEAR(data[2], -3.14159/2, 1e-4);
-    EXPECT_EQ(data[3], 0);
+    EXPECT_NEAR(vec2[0].real(), 3.14159, 1e-4);
+    EXPECT_EQ(vec2[0].imag(), 0);
+    EXPECT_NEAR(vec2[1].real(), -3.14159/2, 1e-4);
+    EXPECT_EQ(vec2[1].imag(), 0);
 }
 
 TYPED_TEST(tComplex, Conj) {
@@ -96,9 +95,8 @@ TYPED_TEST(tComplex, Cos) {
     Complex<TypeParam> vec1(2), vec2(2);
     vec1 = {3.14159, 4, 3.14159/2, -2};
     vec2 = cos(vec1);
-    Type* data = reinterpret_cast<Type*>(&vec2[0]);
-    EXPECT_NEAR(data[0], -1, 1e-4);
-    EXPECT_EQ(data[1], 4);
-    EXPECT_NEAR(data[2], 0, 1e-4);
-    EXPECT_EQ(data[3], -2);
+    EXPECT_NEAR(vec2[0].real(), -1, 1e-4);
+    EXPECT_EQ(vec2[0].imag(), 4);
+    EXPECT_NEAR(vec2[1].real(), 0, 1e-4);
+    EXPECT_EQ(vec2[1].imag(), -2);
 }
