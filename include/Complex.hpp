@@ -4,14 +4,33 @@
 
 #include <cassert>
 
-class gpuDoubleComplex {
- public:
+
+class gpuDouble {};
+
+template <typename T>
+struct complex_traits {
+    typedef typename T::value_type value_type;
+};
+
+template<>
+struct complex_traits<gpuDouble> {
+    typedef double value_type;
+};
+
+template<>
+struct complex_traits<float> {
+    typedef float value_type;
+};
+
+template<>
+struct complex_traits<double> {
     typedef double value_type;
 };
 
 template<typename T>
 class Complex{
-    using Type=typename T::value_type;
+    using Type = typename complex_traits<T>::value_type;
+
  public:
     explicit Complex(size_t N) : _N(N) {
         this->_ptr = reinterpret_cast<void*>(new T[N]);
@@ -158,6 +177,6 @@ class Complex{
     void* _ptr;
 };
 
-template<> Complex<gpuDoubleComplex>::Complex(size_t N);
-template<> Complex<gpuDoubleComplex>::~Complex();
+template<> Complex<gpuDouble>::Complex(size_t N);
+template<> Complex<gpuDouble>::~Complex();
 
