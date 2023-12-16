@@ -1,10 +1,15 @@
-# Copyright 2022 Caleb Magruder
+# Copyright 2023 Caleb Magruder
 
 cmake_minimum_required(VERSION 3.22)
-project(Symmetry)
+project(Symmetry LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
+include(CheckLanguage)
+check_language(CUDA)
+if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_CPPLINT "cpplint;--quiet;--filter=-build/include_subdir;--exclude=${CMAKE_BINARY_DIR}/*")

@@ -1,4 +1,4 @@
-# Copyright 2022 Caleb Magruder
+# Copyright 2023 Caleb Magruder
 
 project(Symmetry)
 
@@ -13,13 +13,25 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Pixel.hpp")
 endif()
 
-add_library(Symmetry SHARED
+set(SYMMETRY_SRCS
     ${CMAKE_SOURCE_DIR}/src/Color.cpp
     ${CMAKE_SOURCE_DIR}/src/ColorMap.cpp
     ${CMAKE_SOURCE_DIR}/src/Image.cpp
     ${CMAKE_SOURCE_DIR}/src/Param.cpp
     ${CMAKE_SOURCE_DIR}/src/PBar.cpp
 )
+
+if(CMAKE_CUDA_COMPILER)
+    add_library(Symmetry SHARED
+        ${SYMMETRY_SRCS}
+        ${CMAKE_SOURCE_DIR}/src/Complex.cu
+    )
+    target_compile_definitions(Symmetry PUBLIC CMAKE_CUDA_COMPILER)
+else()
+    add_library(Symmetry SHARED
+        ${SYMMETRY_SRCS}
+    )
+endif()
 
 find_library(json json)
 find_path(json_INCLUDE JSON.h)

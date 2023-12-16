@@ -10,83 +10,83 @@ template <typename T>
 class tComplex : public testing::Test {};
 
 using Types = ::testing::Types <
-    std::complex<float>,
-    std::complex<double>
+    float,
+    double
+#ifdef CMAKE_CUDA_COMPILER
+    , gpuDouble
+#endif
 >;
 
 TYPED_TEST_SUITE(tComplex, Types);
 
 TYPED_TEST(tComplex, Ctor) {
-    Complex<TypeParam> vec(2);
-    vec[0] = {3, 4};
-    EXPECT_EQ(vec[0], TypeParam(3, 4));
-}
-
-TYPED_TEST(tComplex, Addition) {
-    Complex<TypeParam> x(1), y(1), z(1);
-    x[0] = {0, 1};
-    y[0] = {1, -1};
-    z = x + y;
-    EXPECT_EQ(z[0], TypeParam(1, 0));
-}
-
-TYPED_TEST(tComplex, Multiplication) {
-    Complex<TypeParam> x(1), y(1), z(1);
-    x[0] = {0, 1};
-    y[0] = {1, -1};
-    z = x * y;
-    EXPECT_EQ(z[0], TypeParam(1, 1));
+    using Type = typename complex_traits<TypeParam>::value_type;
+    using List = std::initializer_list<Type>;
+    Complex<TypeParam> vec{3, 4, 1.4, -1};
+    EXPECT_EQ(vec, List({3, 4, 1.4, -1}));
+    EXPECT_NE(vec, List({3, 4, 1.5, -1}));
 }
 
 TYPED_TEST(tComplex, Assignment) {
-    Complex<TypeParam> vec1(2);
-    vec1[0] = {1, -1};
-    vec1[1] = {0, 1};
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> vec1{1, -1, 0, 1};
     Complex<TypeParam> vec2(2);
     vec2 = vec1;
-    EXPECT_EQ(vec2[1], TypeParam(0, 1));
+    EXPECT_EQ(vec2, std::initializer_list<Type>({1, -1, 0, 1}));
+}
+
+TYPED_TEST(tComplex, Addition) {
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> x{0, 1}, y{1.5, -1};
+    std::initializer_list<Type> ans = {1.5, 0};
+    EXPECT_EQ(x + y, ans);
+}
+
+TYPED_TEST(tComplex, Multiplication) {
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> x{0, 1}, y{1, -1};
+    EXPECT_EQ(x * y, std::initializer_list<Type>({1, 1}));
 }
 
 TYPED_TEST(tComplex, ScalarMultiplication) {
-    Complex<TypeParam> vec1(1), vec2(1);
-    vec1[0] = {-1, 1};
-    TypeParam a(0, 1);
-    vec2 = a * vec1;
-    EXPECT_EQ(vec2[0], TypeParam(-1, -1));
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> vec1{-1, 1}, vec2(1);
+    Type ad[2] = {0, 1};
+    vec2 = ad * vec1;
+    EXPECT_EQ(vec2, std::initializer_list<Type>({-1, -1}));
 }
 
 TYPED_TEST(tComplex, Abs) {
-    Complex<TypeParam> vec1(2), vec2(2);
-    vec1[0] = {3, -4};
-    vec1[1] = {0, -1};
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> vec1{3, -4, 0, -1}, vec2(2);
     vec2 = abs(vec1);
-    EXPECT_EQ(vec2[0], TypeParam(5, 0));
-    EXPECT_EQ(vec2[1], TypeParam(1, 0));
+    EXPECT_EQ(vec2, std::initializer_list<Type>({5, 0, 1, 0}));
 }
 
 TYPED_TEST(tComplex, Arg) {
-    Complex<TypeParam> vec1(2), vec2(2);
-    vec1[0] = {-1, 0};
-    vec1[1] = {0, -1};
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> vec1{-1, 0, 0, -1}, vec2(2);
     vec2 = arg(vec1);
-    EXPECT_NEAR(real(vec2[0]), 3.14159, 1e-4);
-    EXPECT_NEAR(real(vec2[1]), -3.14159/2, 1e-4);
+    EXPECT_NEAR(vec2[0].real(), 3.14159, 1e-4);
+    EXPECT_EQ(vec2[0].imag(), 0);
+    EXPECT_NEAR(vec2[1].real(), -3.14159/2, 1e-4);
+    EXPECT_EQ(vec2[1].imag(), 0);
 }
 
 TYPED_TEST(tComplex, Conj) {
-    Complex<TypeParam> vec1(2), vec2(2);
-    vec1[0] = {-1, 0};
-    vec1[1] = {1, -2};
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> vec1{-1, 0, 1, -2}, vec2(2);
     vec2 = conj(vec1);
-    EXPECT_EQ(vec2[0], TypeParam(-1, 0));
-    EXPECT_EQ(vec2[1], TypeParam(1, 2));
+    std::initializer_list<Type> ans = {-1, 0, 1, 2};
+    EXPECT_EQ(vec2, ans);
 }
 
 TYPED_TEST(tComplex, Cos) {
-    Complex<TypeParam> vec1(2), vec2(2);
-    vec1[0] = {3.14159, 4};
-    vec1[1] = {3.14159/2, -2};
+    using Type = typename complex_traits<TypeParam>::value_type;
+    Complex<TypeParam> vec1{3.14159, 4, 3.14159/2, -2}, vec2(2);
     vec2 = cos(vec1);
     EXPECT_NEAR(vec2[0].real(), -1, 1e-4);
+    EXPECT_EQ(vec2[0].imag(), 4);
     EXPECT_NEAR(vec2[1].real(), 0, 1e-4);
+    EXPECT_EQ(vec2[1].imag(), -2);
 }
