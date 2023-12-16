@@ -23,27 +23,28 @@ class Complex{
     using ComplexType = std::complex<Type>;
 
  public:
-    explicit Complex(size_t N) : _N(N) {
+    explicit Complex(size_t N) : _N(N), _dptr(nullptr) {
         this->_ptr = ::operator new(2*N*sizeof(Type));
     }
-    ~Complex() { if (_ptr) ::operator delete(_ptr); }
+
+    Complex(std::initializer_list<Type> l) : Complex(l.size()/2) {
+        using Iter = typename std::initializer_list<Type>::const_iterator;
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        for (Iter i = l.begin(); i < l.end(); i++) {
+            *ptr++ = *i;
+        }
+    }
+
+    ~Complex() {
+        if (_ptr) ::operator delete(_ptr);
+        assert(this->_dptr == nullptr);
+    }
 
     Complex<T>& operator=(const Complex<T>& other) {
         assert(this->_N == other._N);
         Type* ptr = reinterpret_cast<Type*>(this->_ptr);
         Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
-        for (ptrdiff_t i = 0; i < 2 * this->_N; i++) {
-            *ptr++ = *other_ptr++;
-        }
-        return *this;
-    }
-
-    Complex<T>& operator=(std::initializer_list<Type> l) {
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
-        for (auto i = l.begin(); i < l.end(); i++) {
-            *ptr = *i;
-            ptr++;
-        }
+        memcpy(ptr, other_ptr, 2 * this->_N * sizeof(Type));
         return *this;
     }
 
@@ -57,10 +58,6 @@ class Complex{
             ptr++;
         }
         return true;
-    }
-
-    ComplexType& operator[](ptrdiff_t i) {
-        return *(reinterpret_cast<ComplexType*>(this->_ptr) + i);
     }
 
     const ComplexType& operator[](ptrdiff_t i) const {
@@ -147,9 +144,10 @@ class Complex{
 
  private:
     size_t _N;
-    void* _ptr;
+    void* _ptr;   // Host pointer
+    void* _dptr;  // Device pointer
 };
 
 template<> Complex<gpuDouble>::Complex(size_t N);
+template<> Complex<gpuDouble>::Complex(std::initializer_list<double> l);
 template<> Complex<gpuDouble>::~Complex();
-
