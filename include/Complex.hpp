@@ -3,7 +3,7 @@
 #pragma once
 
 #include <cassert>
-
+#include <complex>
 
 class gpuDouble {};
 
@@ -78,23 +78,23 @@ class Complex{
         return *this;
     }
 
+    Complex<T>& operator*=(const Complex<T>& other) {
+        ComplexType* other_ptr = reinterpret_cast<ComplexType*>(other._ptr);
+        ComplexType* ptr = reinterpret_cast<ComplexType*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < this->_N; i++) {
+            *ptr++ *= *other_ptr++;
+        }
+        return *this;
+    }
+
     friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {
         assert(x._N == y._N);
-        Complex<T> z(x);
-        z += y;
-        return z;
+        return Complex<T>(x) += y;
     }
 
     friend Complex<T> operator*(const Complex<T>& x, const Complex<T>& y) {
         assert(x._N == y._N);
-        Complex<T> z(x._N);
-        ComplexType* xptr = reinterpret_cast<ComplexType*>(x._ptr);
-        ComplexType* yptr = reinterpret_cast<ComplexType*>(y._ptr);
-        ComplexType* zptr = reinterpret_cast<ComplexType*>(z._ptr);
-        for (ptrdiff_t i = 0; i < x._N; i++) {
-            *zptr++ = *xptr++ * *yptr++;
-        }
-        return z;
+        return Complex<T>(x) *= y;
     }
 
     friend Complex<T> operator*(const Type a[2], const Complex<T>& x) {
@@ -168,3 +168,4 @@ template<> void Complex<gpuDouble>::_dfree();
 template<> void Complex<gpuDouble>::_memcpyHostToDevice() const;
 template<> void Complex<gpuDouble>::_memcpyDeviceToHost();
 template<> Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);
+template<> Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>&);
