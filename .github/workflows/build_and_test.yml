@@ -1,0 +1,31 @@
+name: CMake Build and Test
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-test-cmake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Symmetry Repo
+        uses: actions/checkout@v3
+      - name: Install GoogleTest, cppcheck
+        run: sudo apt-get -y install --no-install-recommends libgtest-dev cppcheck
+      - name: Install cpplint
+        run: pip install cpplint
+      - name: Build and Install JSON Library
+        run: |
+          git clone https://github.com/ccmagruder/json.git
+          cd json
+          cmake . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          sudo cmake --install build
+          cd ..
+      - name: CMake Configure
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -B build .
+      - name: CMake Build
+        run: cmake --build build
+      - name: CTest
+        run: ctest --test-dir build
