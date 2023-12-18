@@ -28,6 +28,14 @@ class Complex{
         this->_dmalloc();
     }
 
+    Complex(const Complex<T>& other) : Complex(other._N) {
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
+        memcpy(ptr, other_ptr, 2 * this->_N * sizeof(Type));
+    }
+
+    explicit Complex(const Complex<T>&&) = delete;
+
     Complex(std::initializer_list<Type> l) : Complex(l.size()/2) {
         using Iter = typename std::initializer_list<Type>::const_iterator;
         Type* ptr = reinterpret_cast<Type*>(this->_ptr);
@@ -42,13 +50,8 @@ class Complex{
         assert(this->_dptr == nullptr);
     }
 
-    Complex<T>& operator=(const Complex<T>& other) {
-        assert(this->_N == other._N);
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
-        Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
-        memcpy(ptr, other_ptr, 2 * this->_N * sizeof(Type));
-        return *this;
-    }
+    Complex& operator=(const Complex<T>&) = delete;
+    Complex& operator=(const Complex<T>&&) = delete;
 
     bool operator==(std::initializer_list<Type> l) const {
         using Iter = typename std::initializer_list<Type>::const_iterator;
@@ -68,12 +71,11 @@ class Complex{
 
     friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {
         assert(x._N == y._N);
-        Complex<T> z(x._N);
-        Type* xptr = reinterpret_cast<Type*>(x._ptr);
+        Complex<T> z(x);
         Type* yptr = reinterpret_cast<Type*>(y._ptr);
         Type* zptr = reinterpret_cast<Type*>(z._ptr);
         for (ptrdiff_t i = 0; i < 2 * x._N; i++) {
-            *zptr++ = *xptr++ + *yptr++;
+            *zptr++ += *yptr++;
         }
         return z;
     }
