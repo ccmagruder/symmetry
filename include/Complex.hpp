@@ -25,6 +25,7 @@ class Complex{
  public:
     explicit Complex(size_t N) : _N(N), _dptr(nullptr) {
         this->_ptr = ::operator new(2*N*sizeof(Type));
+        this->_dmalloc();
     }
 
     Complex(std::initializer_list<Type> l) : Complex(l.size()/2) {
@@ -37,6 +38,7 @@ class Complex{
 
     ~Complex() {
         if (_ptr) ::operator delete(_ptr);
+        this->_dfree();
         assert(this->_dptr == nullptr);
     }
 
@@ -143,11 +145,17 @@ class Complex{
     }
 
  private:
+    void _dmalloc() {}
+    void _dfree() {}
+    void _memcpyHostToDevice() {}
+    void _memcpyDeviceToHost() {}
+
     size_t _N;
     void* _ptr;   // Host pointer
     void* _dptr;  // Device pointer
 };
 
-template<> Complex<gpuDouble>::Complex(size_t N);
-template<> Complex<gpuDouble>::Complex(std::initializer_list<double> l);
-template<> Complex<gpuDouble>::~Complex();
+template<> void Complex<gpuDouble>::_dmalloc();
+template<> void Complex<gpuDouble>::_dfree();
+template<> void Complex<gpuDouble>::_memcpyHostToDevice();
+template<> void Complex<gpuDouble>::_memcpyDeviceToHost();
