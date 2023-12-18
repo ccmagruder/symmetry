@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-publish-docker-container:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Symmetry Repo
