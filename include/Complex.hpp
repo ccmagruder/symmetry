@@ -69,14 +69,19 @@ class Complex{
         return *(reinterpret_cast<const ComplexType*>(this->_ptr) + i);
     }
 
+    Complex<T>& operator+=(const Complex<T>& other) {
+        Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < 2 * this->_N; i++) {
+            *ptr++ += *other_ptr++;
+        }
+        return *this;
+    }
+
     friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {
         assert(x._N == y._N);
         Complex<T> z(x);
-        Type* yptr = reinterpret_cast<Type*>(y._ptr);
-        Type* zptr = reinterpret_cast<Type*>(z._ptr);
-        for (ptrdiff_t i = 0; i < 2 * x._N; i++) {
-            *zptr++ += *yptr++;
-        }
+        z += y;
         return z;
     }
 
@@ -149,7 +154,7 @@ class Complex{
  private:
     void _dmalloc() {}
     void _dfree() {}
-    void _memcpyHostToDevice() {}
+    void _memcpyHostToDevice() const {}
     void _memcpyDeviceToHost() {}
 
     size_t _N;
@@ -159,5 +164,6 @@ class Complex{
 
 template<> void Complex<gpuDouble>::_dmalloc();
 template<> void Complex<gpuDouble>::_dfree();
-template<> void Complex<gpuDouble>::_memcpyHostToDevice();
+template<> void Complex<gpuDouble>::_memcpyHostToDevice() const;
 template<> void Complex<gpuDouble>::_memcpyDeviceToHost();
+template<> Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);

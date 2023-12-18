@@ -5,6 +5,7 @@
 #include <complex>
 
 #include "Complex.hpp"
+#include "cublas_v2.h"
 
 __global__ void helloCUDA()
 {
@@ -25,7 +26,7 @@ void Complex<gpuDouble>::_dfree() {
 }
 
 template<>
-void Complex<gpuDouble>::_memcpyHostToDevice() {
+void Complex<gpuDouble>::_memcpyHostToDevice() const {
     cudaMemcpy(this->_dptr,
                this->_ptr,
                2 * this->_N * sizeof(Type),
@@ -38,4 +39,17 @@ void Complex<gpuDouble>::_memcpyDeviceToHost() {
                this->_dptr,
                2 * this->_N * sizeof(Type),
                cudaMemcpyDeviceToHost);
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& other) {
+    this->_memcpyHostToDevice();
+    other._memcpyHostToDevice();
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    double alpha(1);
+    cublasDaxpy(handle, 2*this->_N, &alpha, (double*)other._dptr, 1, (double*)this->_dptr, 1);
+    cublasDestroy(handle);
+    this->_memcpyDeviceToHost();
+    return *this;
 }
