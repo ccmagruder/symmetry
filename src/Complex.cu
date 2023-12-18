@@ -12,8 +12,25 @@ __global__ void helloCUDA()
     printf("Hello, CUDA!\n");
 }
 
+class cublasHandle {
+ public:
+    cublasHandle() {
+        cublasStatus_t status = cublasCreate(&this->_handle);
+        assert(status == CUBLAS_STATUS_SUCCESS);
+    }
+
+    ~cublasHandle() {
+        cublasDestroy(this->_handle);
+    }
+
+    operator cublasHandle_t() { return this->_handle; }
+ private:
+    cublasHandle_t _handle;
+};
+
 template<>
 void Complex<gpuDouble>::_dmalloc() {
+    this->_handle = new cublasHandle;
     cudaMalloc(&this->_dptr, 2*this->_N*sizeof(Type));
     // helloCUDA<<<1, 1>>>();
     // cudaDeviceSynchronize();
@@ -23,6 +40,7 @@ template<>
 void Complex<gpuDouble>::_dfree() {
     if (this->_dptr) cudaFree(this->_dptr);
     this->_dptr = nullptr;
+    delete reinterpret_cast<cublasHandle*>(this->_handle);
 }
 
 template<>
@@ -45,11 +63,16 @@ template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& other) {
     this->_memcpyHostToDevice();
     other._memcpyHostToDevice();
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    double alpha(1);
-    cublasDaxpy(handle, 2*this->_N, &alpha, (double*)other._dptr, 1, (double*)this->_dptr, 1);
-    cublasDestroy(handle);
+    static const double alpha = 1.0;
+    cublasDaxpy(
+        *reinterpret_cast<cublasHandle*>(this->_handle),  // handle
+        2*this->_N,                                       // n
+        &alpha,                                           // alpha
+        reinterpret_cast<double*>(other._dptr),           // x
+        1,                                                // incx
+        reinterpret_cast<double*>(this->_dptr),            // y
+        1);                                               // incy
+    // cudaDeviceSynchronize();
     this->_memcpyDeviceToHost();
     return *this;
 }

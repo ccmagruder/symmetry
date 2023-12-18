@@ -158,8 +158,9 @@ class Complex{
     void _memcpyDeviceToHost() {}
 
     size_t _N;
-    void* _ptr;   // Host pointer
-    void* _dptr;  // Device pointer
+    void* _ptr;     // Host pointer
+    void* _dptr;    // Device pointer
+    void* _handle;  // Device context
 };
 
 template<> void Complex<gpuDouble>::_dmalloc();
