@@ -193,3 +193,5 @@ template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>&);
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>&);
