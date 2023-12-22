@@ -31,6 +31,8 @@ RUN mkdir -p /workspace \
     && curl -L -o code_amd64.deb https://code.visualstudio.com/sha/download\?build\=stable\&os=linux-deb-x64 \
     && apt install -y ./code_amd64.deb --no-install-recommends\
     && rm code_amd64.deb \
+    && code --no-sandbox --user-data-dir=/root --install-extension ms-vscode.cpptools-extension-pack \
+    && code --no-sandbox --user-data-dir=/root --install-extension ms-azuretools.vscode-docker \
     && git clone https://github.com/ccmagruder/json.git \
     && cd json \
     && cmake . -B build -DCMAKE_BUILD_TYPE=Release \
@@ -44,7 +46,7 @@ RUN mkdir -p /workspace \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /home/vscode \
     && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
-    && git config --global core.pager "less -eFiJM~ -j3 --tabs=3"
+    && git config --global core.pager "less -FRX"
 
 CMD code --no-sandbox --user-data-dir=/root tunnel
 
