@@ -114,3 +114,43 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
     this->_memcpyDeviceToHost();
     return *this;
 }
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::abs() {
+    const cuDoubleComplex* cptr = reinterpret_cast<const cuDoubleComplex*>(this->_ptr);
+    double* ptr = reinterpret_cast<double*>(this->_ptr);
+    for (ptrdiff_t i = 0; i < this->_N; i++) {
+        *ptr++ = cuCabs(*cptr++);
+        *ptr++ = 0;
+    }
+    return *this;
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::arg() {
+    double* ptr = reinterpret_cast<double*>(this->_ptr);
+    for (ptrdiff_t i = 0; i < this->_N; i++) {
+        *ptr++ = atan2(ptr[1], ptr[0]);
+        *ptr++ = 0;
+    }
+    return *this;
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::conj() {
+    cuDoubleComplex* cptr = reinterpret_cast<cuDoubleComplex*>(this->_ptr);
+    for (ptrdiff_t i = 0; i < this->_N; i++) {
+        *cptr++ = cuConj(*cptr);
+    }
+    return *this;
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::cos() {
+    double* ptr = reinterpret_cast<double*>(this->_ptr);
+    for (ptrdiff_t i = 0; i < this->_N; i++) {
+        *ptr++ = std::cos(*ptr);
+        *ptr++;
+    }
+    return *this;
+}

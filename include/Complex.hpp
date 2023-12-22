@@ -195,3 +195,7 @@ template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>&);
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>&);
+template<> Complex<gpuDouble>& Complex<gpuDouble>::abs();
+template<> Complex<gpuDouble>& Complex<gpuDouble>::arg();
+template<> Complex<gpuDouble>& Complex<gpuDouble>::conj();
+template<> Complex<gpuDouble>& Complex<gpuDouble>::cos();
