@@ -106,6 +106,16 @@ class Complex{
         return *this;
     }
 
+    Complex<T>& arg() {
+        ComplexType* cptr = reinterpret_cast<ComplexType*>(this->_ptr);
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < this->_N; i++) {
+            *ptr++ = std::arg(*cptr++);
+            *ptr++ = 0;
+        }
+        return *this;
+    }
+
     friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {
         assert(x._N == y._N);
         return Complex<T>(x) += y;
@@ -125,14 +135,7 @@ class Complex{
     }
 
     friend Complex<T> arg(const Complex<T>& x) {
-        Complex<T> y(x._N);
-        ComplexType* xptr = reinterpret_cast<ComplexType*>(x._ptr);
-        Type* yptr = reinterpret_cast<Type*>(y._ptr);
-        for (ptrdiff_t i = 0; i < x._N; i++) {
-            *yptr++ = arg(*xptr++);
-            *yptr++ = 0;
-        }
-        return y;
+        return Complex<T>(x).arg();
     }
 
     friend Complex<T> conj(const Complex<T>& x) {
