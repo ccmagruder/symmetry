@@ -79,10 +79,29 @@ class Complex{
     }
 
     Complex<T>& operator*=(const Complex<T>& other) {
-        ComplexType* other_ptr = reinterpret_cast<ComplexType*>(other._ptr);
+        const ComplexType* other_ptr
+            = reinterpret_cast<const ComplexType*>(other._ptr);
         ComplexType* ptr = reinterpret_cast<ComplexType*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ *= *other_ptr++;
+        }
+        return *this;
+    }
+
+    Complex<T>& operator*=(const ComplexType& a) {
+        ComplexType* ptr = reinterpret_cast<ComplexType*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < this->_N; i++) {
+            *ptr++ *= a;
+        }
+        return *this;
+    }
+
+    Complex<T>& abs() {
+        ComplexType* cptr = reinterpret_cast<ComplexType*>(this->_ptr);
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < this->_N; i++) {
+            *ptr++ = std::abs(*cptr++);
+            *ptr++ = 0;
         }
         return *this;
     }
@@ -97,26 +116,12 @@ class Complex{
         return Complex<T>(x) *= y;
     }
 
-    friend Complex<T> operator*(const Type a[2], const Complex<T>& x) {
-        Complex<T> y(x._N);
-        const ComplexType* const aptr = reinterpret_cast<const ComplexType*>(a);
-        const ComplexType* xptr = reinterpret_cast<const ComplexType*>(x._ptr);
-        ComplexType* yptr = reinterpret_cast<ComplexType*>(y._ptr);
-        for (ptrdiff_t i = 0; i < x._N; i++) {
-            *yptr++ = *aptr * *xptr++;
-        }
-        return y;
+    friend Complex<T> operator*(const ComplexType& a, const Complex<T>& x) {
+        return Complex<T>(x) *= a;
     }
 
     friend Complex<T> abs(const Complex<T>& x) {
-        Complex<T> y(x._N);
-        ComplexType* xptr = reinterpret_cast<std::complex<Type>*>(x._ptr);
-        Type* yptr = reinterpret_cast<Type*>(y._ptr);
-        for (ptrdiff_t i = 0; i < x._N; i++) {
-            *yptr++ = abs(*xptr++);
-            *yptr++ = 0;
-        }
-        return y;
+        return Complex<T>(x).abs();
     }
 
     friend Complex<T> arg(const Complex<T>& x) {
@@ -167,5 +172,7 @@ template<> void Complex<gpuDouble>::_dmalloc();
 template<> void Complex<gpuDouble>::_dfree();
 template<> void Complex<gpuDouble>::_memcpyHostToDevice() const;
 template<> void Complex<gpuDouble>::_memcpyDeviceToHost();
-template<> Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);
-template<> Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>&);
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>&);
