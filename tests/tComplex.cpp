@@ -36,9 +36,8 @@ TYPED_TEST(tComplex, CopyCtor) {
 
 TYPED_TEST(tComplex, Addition) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> x{0, 1}, y{1.5, -1};
-    std::initializer_list<Type> ans = {1.5, 0};
-    EXPECT_EQ(x + y, ans);
+    Complex<TypeParam> x{0, 1, 3.25, 0.25}, y{1.5, -1, 1, -1.5};
+    EXPECT_EQ(x + y, std::initializer_list<Type>({1.5, 0, 4.25, -1.25}));
 }
 
 TYPED_TEST(tComplex, Multiplication) {

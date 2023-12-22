@@ -163,6 +163,16 @@ class Complex{
         return Complex<T>(x).cos();
     }
 
+    friend std::ostream& operator<<(std::ostream& os, const Complex<T>& c) {
+        os << "Complex<T>{";
+        Type* ptr = reinterpret_cast<Type*>(c._ptr);
+        for (ptrdiff_t i = 0; i < 2 * c._N; i++) {
+            os << *ptr++ << ",";
+        }
+        os << "}\n";
+        return os;
+    }
+
  private:
     void _dmalloc() {}
     void _dfree() {}
