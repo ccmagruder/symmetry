@@ -42,8 +42,8 @@ TYPED_TEST(tComplex, Addition) {
 
 TYPED_TEST(tComplex, Multiplication) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> x{0, 1}, y{1, -1};
-    EXPECT_EQ(x * y, std::initializer_list<Type>({1, 1}));
+    Complex<TypeParam> x{0, -1, 0, 1}, y{1.5, -1, 1, 0};
+    EXPECT_EQ(x * y, std::initializer_list<Type>({-1, -1.5, 0, 1}));
 }
 
 TYPED_TEST(tComplex, ScalarMultiplication) {

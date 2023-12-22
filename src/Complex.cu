@@ -93,11 +93,11 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
         this->_N,                                                  // m
         1,                                                         // n
         reinterpret_cast<cuDoubleComplex*>(other._dptr),           // A
-        1,                                                         // lda
+        this->_N,                                                  // lda
         reinterpret_cast<cuDoubleComplex*>(this->_dptr),           // x
         1,                                                         // incx
         reinterpret_cast<cuDoubleComplex*>(this->_dptr),           // C
-        1);                                                        // ldc
+        this->_N);                                                 // ldc
     this->_memcpyDeviceToHost();
     return *this;
 }
