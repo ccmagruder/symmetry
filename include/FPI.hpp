@@ -5,25 +5,28 @@
 #include <complex>
 #include <string>
 
+#include "Complex.hpp"
 #include "Image.hpp"
 #include "Param.h"
 
-template <typename T = std::complex<double>>
+template <typename T = double>
 class FPI : public Image<uint64_t, 1>{
+    using Type = typename complex_traits<T>::value_type;
+
  public:
     explicit FPI(Param p, const std::string& label = " FPI ")
         : Image(p.resy, p.resx),
           _param(p),
           _z(0, -0.12),
           _label(label) {
-        this->_alpha = static_cast<typename T::value_type>(_param.alpha);
-        this->_beta = static_cast<typename T::value_type>(_param.beta);
-        this->_delta = static_cast<typename T::value_type>(_param.delta);
-        this->_gamma = static_cast<typename T::value_type>(_param.gamma);
-        this->_n = static_cast<typename T::value_type>(_param.n);
-        this->_p = static_cast<typename T::value_type>(_param.p);
-        this->_lambda = T(_param.lambda, 0);
-        this->_omega = T(0, _param.omega);
+        this->_alpha = static_cast<Type>(_param.alpha);
+        this->_beta = static_cast<Type>(_param.beta);
+        this->_delta = static_cast<Type>(_param.delta);
+        this->_gamma = static_cast<Type>(_param.gamma);
+        this->_n = static_cast<Type>(_param.n);
+        this->_p = static_cast<Type>(_param.p);
+        this->_lambda = std::complex<Type>(_param.lambda, 0);
+        this->_omega = std::complex<Type>(0, _param.omega);
         // Initialize 1e3 transient beginning
         for (int i = 0; i < 1e3; i++) {
             _z = F(_z);
@@ -32,7 +35,7 @@ class FPI : public Image<uint64_t, 1>{
 
     ~FPI() {}
 
-    T F(T z) {
+    std::complex<Type> F(std::complex<Type> z) {
         if (std::isnan(real(_z))) exit(1);
 
         // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
@@ -47,8 +50,8 @@ class FPI : public Image<uint64_t, 1>{
                 //+ _param.beta * real(pow(z, _param.n))
                 + this->_beta * real(z*this->_znm1)
                 + this->_omega
-                + T(this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
-                    0)
+                + std::complex<Type>(
+                    this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z), 0)
             ) * z                                           // NOLINT
             //+ _param.gamma * pow(conj(z), _param.n - 1);
             + this->_gamma * conj(this->_znm1);
@@ -124,17 +127,17 @@ class FPI : public Image<uint64_t, 1>{
  private:
     const Param _param;
 
-    T _z;
-    T _znm1;
-    T _znew;
-    T _lambda;
-    T _omega;
-    typename T::value_type _alpha;
-    typename T::value_type _beta;
-    typename T::value_type _delta;
-    typename T::value_type _gamma;
-    typename T::value_type _n;
-    typename T::value_type _p;
+    std::complex<Type> _z;
+    std::complex<Type> _znm1;
+    std::complex<Type> _znew;
+    std::complex<Type> _lambda;
+    std::complex<Type> _omega;
+    Type _alpha;
+    Type _beta;
+    Type _delta;
+    Type _gamma;
+    Type _n;
+    Type _p;
 
     const std::string _label;
 };
