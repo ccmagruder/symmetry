@@ -19,7 +19,7 @@ using Types = ::testing::Types <
 
 TYPED_TEST_SUITE(tComplex, Types);
 
-TYPED_TEST(tComplex, Ctor) {
+TYPED_TEST(tComplex, CtorInitializerList) {
     using Type = typename complex_traits<TypeParam>::value_type;
     using List = std::initializer_list<Type>;
     Complex<TypeParam> vec{3, 4, 1.4, -1};
@@ -27,46 +27,43 @@ TYPED_TEST(tComplex, Ctor) {
     EXPECT_NE(vec, List({3, 4, 1.5, -1}));
 }
 
-TYPED_TEST(tComplex, Assignment) {
+TYPED_TEST(tComplex, CopyCtor) {
     using Type = typename complex_traits<TypeParam>::value_type;
     Complex<TypeParam> vec1{1, -1, 0, 1};
-    Complex<TypeParam> vec2(2);
-    vec2 = vec1;
+    Complex<TypeParam> vec2(vec1);
     EXPECT_EQ(vec2, std::initializer_list<Type>({1, -1, 0, 1}));
 }
 
 TYPED_TEST(tComplex, Addition) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> x{0, 1}, y{1.5, -1};
-    std::initializer_list<Type> ans = {1.5, 0};
-    EXPECT_EQ(x + y, ans);
+    Complex<TypeParam> x{0, 1, 3.25, 0.25}, y{1.5, -1, 1, -1.5};
+    EXPECT_EQ(x + y, std::initializer_list<Type>({1.5, 0, 4.25, -1.25}));
 }
 
 TYPED_TEST(tComplex, Multiplication) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> x{0, 1}, y{1, -1};
-    EXPECT_EQ(x * y, std::initializer_list<Type>({1, 1}));
+    Complex<TypeParam> x{0, -1, 0, 1}, y{1.5, -1, 1, 0};
+    EXPECT_EQ(x * y, std::initializer_list<Type>({-1, -1.5, 0, 1}));
 }
 
 TYPED_TEST(tComplex, ScalarMultiplication) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{-1, 1}, vec2(1);
-    Type ad[2] = {0, 1};
-    vec2 = ad * vec1;
-    EXPECT_EQ(vec2, std::initializer_list<Type>({-1, -1}));
+    Complex<TypeParam> vec1{-1, 1, 1.25, -0.125};
+    std::complex<Type> ad = {0, 1};
+    Complex<TypeParam> vec2(ad * vec1);
+    EXPECT_EQ(vec2, std::initializer_list<Type>({-1, -1, 0.125, 1.25}));
 }
 
 TYPED_TEST(tComplex, Abs) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{3, -4, 0, -1}, vec2(2);
-    vec2 = abs(vec1);
-    EXPECT_EQ(vec2, std::initializer_list<Type>({5, 0, 1, 0}));
+    Complex<TypeParam> vec1{3, -4, 0, -1};
+    EXPECT_EQ(abs(vec1), std::initializer_list<Type>({5, 0, 1, 0}));
 }
 
 TYPED_TEST(tComplex, Arg) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{-1, 0, 0, -1}, vec2(2);
-    vec2 = arg(vec1);
+    Complex<TypeParam> vec1{-1, 0, 0, -1};
+    Complex<TypeParam> vec2(arg(vec1));
     EXPECT_NEAR(vec2[0].real(), 3.14159, 1e-4);
     EXPECT_EQ(vec2[0].imag(), 0);
     EXPECT_NEAR(vec2[1].real(), -3.14159/2, 1e-4);
@@ -75,16 +72,15 @@ TYPED_TEST(tComplex, Arg) {
 
 TYPED_TEST(tComplex, Conj) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{-1, 0, 1, -2}, vec2(2);
-    vec2 = conj(vec1);
+    Complex<TypeParam> vec1{-1, 0, 1, -2};
     std::initializer_list<Type> ans = {-1, 0, 1, 2};
-    EXPECT_EQ(vec2, ans);
+    EXPECT_EQ(conj(vec1), ans);
 }
 
 TYPED_TEST(tComplex, Cos) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{3.14159, 4, 3.14159/2, -2}, vec2(2);
-    vec2 = cos(vec1);
+    Complex<TypeParam> vec1{3.14159, 4, 3.14159/2, -2};
+    Complex<TypeParam> vec2(cos(vec1));
     EXPECT_NEAR(vec2[0].real(), -1, 1e-4);
     EXPECT_EQ(vec2[0].imag(), 4);
     EXPECT_NEAR(vec2[1].real(), 0, 1e-4);

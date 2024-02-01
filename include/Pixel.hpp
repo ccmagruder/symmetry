@@ -41,6 +41,10 @@ class Pixel {
         return *this;
     }
 
+    bool operator==(const Pixel<T, 1>& other) const {
+        return *this->_data == *other._data;
+    }
+
  private:
     T* _data;
 };

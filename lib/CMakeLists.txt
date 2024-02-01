@@ -26,6 +26,7 @@ if(CMAKE_CUDA_COMPILER)
         ${SYMMETRY_SRCS}
         ${CMAKE_SOURCE_DIR}/src/Complex.cu
     )
+    target_link_libraries(Symmetry cublas)
     target_compile_definitions(Symmetry PUBLIC CMAKE_CUDA_COMPILER)
 else()
     add_library(Symmetry SHARED
