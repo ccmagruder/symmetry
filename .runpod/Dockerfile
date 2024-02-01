@@ -15,6 +15,7 @@ RUN mkdir -p /workspace \
         git-lfs \
         less \
         libgtest-dev \
+        libbenchmark-dev \
         make \
         pip \
         vim \
@@ -31,8 +32,6 @@ RUN mkdir -p /workspace \
     && curl -L -o code_amd64.deb https://code.visualstudio.com/sha/download\?build\=stable\&os=linux-deb-x64 \
     && apt install -y ./code_amd64.deb --no-install-recommends\
     && rm code_amd64.deb \
-    && code --no-sandbox --user-data-dir=/root --install-extension ms-vscode.cpptools-extension-pack \
-    && code --no-sandbox --user-data-dir=/root --install-extension ms-azuretools.vscode-docker \
     && git clone https://github.com/ccmagruder/json.git \
     && cd json \
     && cmake . -B build -DCMAKE_BUILD_TYPE=Release \
