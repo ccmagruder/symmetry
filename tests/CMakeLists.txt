@@ -5,6 +5,8 @@ project(Symmetry)
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
+find_package(benchmark REQUIRED)
+
 add_executable(tColorMap tColorMap.cpp)
 add_executable(tComplex tComplex.cpp)
 add_executable(tFPI tFPI.cpp)
@@ -12,12 +14,16 @@ add_executable(tImage tImage.cpp)
 add_executable(tParam tParam.cpp)
 add_executable(tPixel tPixel.cpp)
 
+add_executable(bComplex bComplex.cpp)
+
 target_link_libraries(tColorMap Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tComplex Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tFPI Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tImage Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tParam Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tPixel Symmetry GTest::gtest GTest::gtest_main)
+
+target_link_libraries(bComplex Symmetry benchmark::benchmark benchmark::benchmark_main)
 
 add_subdirectory(config)
 add_subdirectory(images)
