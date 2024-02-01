@@ -4,10 +4,21 @@
 
 #include "Complex.hpp"
 
-static void bComplexAddition(benchmark::State& state) {  // NOLINT
-    Complex<float> x(state.range(0)), y(state.range(0));
+template <typename T>
+void bComplexAddition(benchmark::State& state) {  // NOLINT
+    Complex<T> x(state.range(0)), y(state.range(0));
     for (auto _ : state)
-        Complex<float> z = x + y;
+        x += y;
 }
 
-BENCHMARK(bComplexAddition)->RangeMultiplier(4)->Range(64, 4096);
+BENCHMARK(bComplexAddition<float>)
+    ->RangeMultiplier(16)->Range(1024, 256*1024*1024)
+    ->Unit(benchmark::kMillisecond);
+BENCHMARK(bComplexAddition<double>)
+    ->RangeMultiplier(16)->Range(1024, 256*1024*1024)
+    ->Unit(benchmark::kMillisecond);
+#ifdef CMAKE_CUDA_COMPILER
+BENCHMARK(bComplexAddition<gpuDouble>)
+    ->RangeMultiplier(16)->Range(1024, 256*1024*1024)
+    ->Unit(benchmark::kMillisecond);
+#endif
