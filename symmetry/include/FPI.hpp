@@ -51,7 +51,9 @@ class FPI : public Image<uint64_t, 1>{
                 + this->_beta * real(z*this->_znm1)
                 + this->_omega
                 + std::complex<Type>(
-                    this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z), 0)
+                    this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
+                    0
+                  )
             ) * z                                           // NOLINT
             //+ _param.gamma * pow(conj(z), _param.n - 1);
             + this->_gamma * conj(this->_znm1);
