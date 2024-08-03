@@ -1,4 +1,4 @@
-name: Build and Publish Docker Containers
+name: Build and Publish Runpod Container
 
 on:
   push:
@@ -20,3 +20,4 @@ jobs:
         run: docker build - < .runpod/Dockerfile --tag ccmagruder/runpod-symmetry --platform linux/amd64
       - name: Docker Push Container
         run: docker push ccmagruder/runpod-symmetry
+
