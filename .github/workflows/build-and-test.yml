@@ -24,7 +24,7 @@ jobs:
           sudo cmake --install build
           cd ..
       - name: CMake Configure
-        run: cmake -DCMAKE_BUILD_TYPE=Debug -B build .
+        run: cmake -DCMAKE_BUILD_TYPE=Debug -B build symmetry
       - name: CMake Build
         run: cmake --build build
       - name: CTest
