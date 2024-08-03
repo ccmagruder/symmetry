@@ -4,6 +4,7 @@
 
 #include <ostream>
 #include <vector>
+#include "stdint.h"
 
 class Color : private std::vector<uint16_t> {
  public:

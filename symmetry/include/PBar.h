@@ -6,6 +6,8 @@
 #include<iostream>
 #include<string>
 
+#include "stdint.h"
+
 class PBar {
  public:
     PBar(const uint64_t n_iter, const int pbar_width,
