@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV CC=/usr/bin/clang
 ENV CXX=/usr/bin/clang++
 
-RUN apt update && apt install --no-install-recommends -y build-essential ca-certificates cmake clang cppcheck gcc git libgtest-dev pipx
+RUN apt update && apt install --no-install-recommends -y build-essential ca-certificates ccls cmake clang cppcheck gcc git libgtest-dev pipx
 
 WORKDIR /workspace
 
@@ -32,11 +32,14 @@ code:
 build:
   FROM +code
   RUN export PATH=$PATH:/root/.local/bin
-  RUN cmake -B build -DCMAKE_BUILD_TYPE=Debug symmetry
+  RUN cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=YES symmetry
+  SAVE ARTIFACT build/compile_commands.json
+  RUN ln -s build/compile_commands.json .
   RUN export PATH=$PATH:/root/.local/bin && cmake --build build
 
 test:
   FROM +build
   WORKDIR build
   RUN ctest
+  # RUN exit 1
 
