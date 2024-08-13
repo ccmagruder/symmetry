@@ -1,45 +1,62 @@
 VERSION 0.8
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV CC=/usr/bin/clang
 ENV CXX=/usr/bin/clang++
 
-RUN apt update && apt install --no-install-recommends -y build-essential ca-certificates ccls cmake clang cppcheck gcc git libgtest-dev pipx
+RUN apt update \
+  && apt install --no-install-recommends -y build-essential \
+     ca-certificates \
+     ccls \
+     cmake \
+     clang \
+     cppcheck \
+     gcc \
+     git \
+     libgtest-dev \
+     pipx \
+  && pipx ensurepath \
+  && pipx install cpplint
 
 WORKDIR /workspace
 
+IMPORT github.com/ccmagruder/json:feature/earthly AS json
+
 deps:
-  RUN pipx ensurepath
-  RUN pipx install cpplint
-  RUN git clone https://github.com/ccmagruder/json.git
-  WORKDIR json
-  RUN cmake . -B build -DCMAKE_BUILD_TYPE=Release
-  RUN cmake --build build
-  RUN cmake --install build
+  BUILD json+build
+  COPY json+build/JSON.h /usr/local/include
+  COPY json+build/Variant.h /usr/local/include
+  COPY json+build/libjson.so /usr/local/lib
 
 code:
   FROM +deps
-  WORKDIR /workspace
-  COPY symmetry/CMakeLists.txt symmetry/CMakeLists.txt
-  COPY symmetry/config/CMakeLists.txt symmetry/config/CMakeLists.txt
-  COPY symmetry/images/CMakeLists.txt symmetry/images/CMakeLists.txt
-  COPY symmetry/src symmetry/src
-  COPY symmetry/include symmetry/include
-  COPY symmetry/lib symmetry/lib
-  COPY symmetry/tests symmetry/tests
+  COPY symmetry/CMakeLists.txt CMakeLists.txt
+  COPY symmetry/config/CMakeLists.txt config/CMakeLists.txt
+  COPY symmetry/images/CMakeLists.txt images/CMakeLists.txt
+  COPY symmetry/src src
+  COPY symmetry/include include
+  COPY symmetry/lib lib
+  COPY symmetry/tests tests
 
 build:
   FROM +code
-  RUN export PATH=$PATH:/root/.local/bin
-  RUN cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=YES symmetry
+  RUN cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -B build -S .
+  RUN --mount type=cache,target=/workspace/build/src/CMakeFiles \
+      --mount type=cache,target=/workspace/build/lib/CMakeFiles \
+      --mount type=cache,target=/workspace/build/tests/CMakeFiles \
+      PATH=$PATH:/root/.local/bin cmake --build ./build
   SAVE ARTIFACT build/compile_commands.json
-  RUN ln -s build/compile_commands.json .
-  RUN export PATH=$PATH:/root/.local/bin && cmake --build build
 
 test:
   FROM +build
-  WORKDIR build
-  RUN ctest
-  # RUN exit 1
+  RUN ctest --test-dir ./build
+
+output:
+  LOCALLY
+  COPY +build/compile_commands.json ./
+
+all:
+  BUILD +test
+  BUILD +output
 
