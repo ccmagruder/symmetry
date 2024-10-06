@@ -1,13 +1,10 @@
 #!/bin/zsh
 
-earthly sat ls
-
-if $?
-then
-  earthly account login --token $(cat /run/secrets/user_earthly_token)
-  earthly org select ccmagruder
-  earthly sat select earthly-noble-arm64
+# earthly --sat earthly-noble-arm64 -i +all
+if [ -d build ]; then
+  rm -rf build
 fi
 
-earthly +test
-
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -B build -S symmetry \
+  && cmake --build ./build \
+  && ctest --test-dir build

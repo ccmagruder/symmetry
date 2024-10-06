@@ -1,0 +1,3 @@
+%compile_commands.json
+-I/usr/local/include
+-Isymmetry/include
