@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
       - name: Docker Build Container
-        run: docker build - < .runpod/Dockerfile --tag ccmagruder/runpod-symmetry --platform linux/amd64
+        run: docker build - < .devcontainer/Dockerfile --tag ccmagruder/runpod-symmetry --platform linux/amd64
       - name: Docker Push Container
         run: docker push ccmagruder/runpod-symmetry
 
