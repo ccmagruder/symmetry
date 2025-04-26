@@ -2,17 +2,6 @@
 
 project(Symmetry)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Color.h")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/ColorMap.h")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Complex.hpp")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/FPI.hpp")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Image.hpp")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Param.h")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/PBar.h")
-    set(CMAKE_CXX_CPPLINT "${CMAKE_CXX_CPPLINT};${CMAKE_SOURCE_DIR}/include/Pixel.hpp")
-endif()
-
 set(SYMMETRY_SRCS
     ${CMAKE_SOURCE_DIR}/src/Color.cpp
     ${CMAKE_SOURCE_DIR}/src/ColorMap.cpp
