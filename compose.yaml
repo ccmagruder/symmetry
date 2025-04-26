@@ -1,11 +1,18 @@
 services:
-  symmetry:
+  devcontainer:
+    image: ccmagruder/devcontainer-symmetry:latest
     build:
-      context: .
       dockerfile: Dockerfile
-    image: symmetry
+      context: .devcontainer
     volumes:
-      - ./config:/mnt/config
-      - ./images:/mnt/images
-    working_dir: /mnt
-
+      - type: bind
+        source: .
+        target: /root/symmetry
+    working_dir: /root/symmetry
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
