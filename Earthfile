@@ -11,13 +11,11 @@ RUN apt update \
      ccls \
      cmake \
      clang \
-     cppcheck \
      gcc \
      git \
      libgtest-dev \
      pipx \
-  && pipx ensurepath \
-  && pipx install cpplint
+  && pipx ensurepath
 
 WORKDIR /workspace
 

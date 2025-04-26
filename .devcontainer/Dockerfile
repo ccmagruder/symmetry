@@ -19,4 +19,11 @@ RUN apt update -y && apt upgrade -y \
   && rm -rf /var/lib/apt/lists/* \
   && python3 -m venv /.venv \
   && PATH=/.venv/bin:$PATH pip install \
-    clangd-tidy \
+    clangd-tidy
+
+RUN cd /root \
+  && git clone https://www.github.com/ccmagruder/json \
+  && cmake -B json/build -S json \
+  && PATH=/.venv/bin:$PATH cmake --build json/build -j24 \
+  && cmake --install json/build \
+  && rm -r json

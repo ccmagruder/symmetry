@@ -1,16 +1,5 @@
 #!/bin/zsh
 
-# earthly sat ls
-#
-# if $?
-# then
-#   earthly account login --token $(cat /run/secrets/user_earthly_token)
-#   earthly org select ccmagruder
-#   earthly sat select earthly-noble-arm64
-# fi
-#
-# earthly +test
-
 if [ -d build ]; then
   rm -rf build
 fi
@@ -21,10 +10,10 @@ cmake -B build -S symmetry -DCMAKE_BUILD_TYPE=Debug
 
 if [ ! $? -eq 0 ]; then
   echo "<<<<<<<< CMake Configure Failed >>>>>>>>"
-  exit 
+  exit 1
 fi
 
-cmake --build build -j10
+PATH=/.venv/bin:$PATH cmake --build build -j10
 
 if [ ! $? -eq 0 ]; then
   echo "<<<<<<<< CMake Build Failed >>>>>>>>"
