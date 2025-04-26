@@ -16,3 +16,42 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  ide:
+    image: ccmagruder/ide-symmetry:latest
+    build:
+      dockerfile: Dockerfile
+      context: .ide
+    command: zsh -c "cd /root/gemm && ~/.tmux/plugins/tpm/scripts/install_plugins.sh && tmux -u new-session -s gemm \"source /.venv/bin/activate && nvim\" \\; split-window"
+    environment:
+      - TERM=xterm-256color
+      - TZ=America/Chicago
+    tty: true
+    volumes:
+      - type: bind
+        source: .
+        target: /root/gemm
+      - type: bind
+        source: ~/.config/nvim
+        target: /root/.config/nvim
+      - type: bind
+        source: ~/.tmux.conf
+        target: /root/.tmux.conf
+        read_only: true
+      - type: bind
+        source: ~/.gitconfig
+        target: /root/.gitconfig
+        read_only: true
+      - type: bind
+        source: ~/.git-credentials
+        target: /root/.git-credentials
+        read_only: true
+      - type: bind
+        source: ./.private.key
+        target: /root/.private.key
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
