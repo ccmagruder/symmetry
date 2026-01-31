@@ -14,8 +14,6 @@ add_executable(tImage tImage.cpp)
 add_executable(tParam tParam.cpp)
 add_executable(tPixel tPixel.cpp)
 
-add_executable(bComplex bComplex.cpp)
-
 target_link_libraries(tColorMap Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tComplex Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tFPI Symmetry GTest::gtest GTest::gtest_main)
@@ -23,7 +21,11 @@ target_link_libraries(tImage Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tParam Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tPixel Symmetry GTest::gtest GTest::gtest_main)
 
+add_executable(bComplex bComplex.cpp)
+
 target_link_libraries(bComplex Symmetry benchmark::benchmark benchmark::benchmark_main)
+
+install(TARGETS bComplex DESTINATION bin)
 
 add_subdirectory(config)
 add_subdirectory(images)

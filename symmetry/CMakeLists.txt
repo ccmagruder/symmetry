@@ -21,14 +21,11 @@ endif()
 add_subdirectory(config)
 add_subdirectory(images)
 add_subdirectory(lib)
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_subdirectory(tests)
-endif()
+add_subdirectory(tests)
 
 add_executable(symmetry src/Symmetry.cpp)
-
 target_link_libraries(symmetry Symmetry)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    enable_testing()
-endif()
+install(TARGETS symmetry DESTINATION bin)
+
+enable_testing()
