@@ -8,12 +8,6 @@ set(CMAKE_CXX_STANDARD 20)
 include(CheckLanguage)
 check_language(CUDA)
 
-find_program(NVIDIA_SMI NAMES nvidia-smi)
-if(NVIDIA_SMI STREQUAL "NVIDIA_SMI-NOTFOUND")
-    message(WARNING "Compiler nvcc found; however, GPU not found. Disabling CUDA.")
-    set(CMAKE_CUDA_COMPILER "")
-endif()
-
 if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
 endif()

@@ -1,5 +1,5 @@
 # default.nix
-{ lib, stdenv, cmake, cudaPackages, gtest, json, gbenchmark}:
+{ lib, stdenv, cmake, cudaPackages, gtest, json, gbenchmark }:
 
 stdenv.mkDerivation {
   pname = "symmetry";
@@ -17,9 +17,15 @@ stdenv.mkDerivation {
 
   buildInputs = [
     cudaPackages.cuda_cudart
+    cudaPackages.libcublas
     gtest
     json
     gbenchmark
+  ];
+
+  cmakeFlags = [
+    "-DCMAKE_BUILD_TYPE=Release"
+    "-DCMAKE_CUDA_COMPILER=${cudaPackages.cuda_nvcc}/bin/nvcc"
   ];
 
   doCheck = true;
