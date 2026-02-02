@@ -6,11 +6,6 @@
 #include "Complex.hpp"
 #include "cublas_v2.h"
 
-__global__ void helloCUDA()
-{
-    printf("Hello, CUDA!\n");
-}
-
 class CublasHandleSingleton {
  public:
     CublasHandleSingleton() {
@@ -39,8 +34,6 @@ template<>
 void Complex<gpuDouble>::_dmalloc() {
     this->_handle = new CublasHandleSingleton;
     cudaMalloc(&this->_dptr, 2*this->_N*sizeof(Type));
-    // helloCUDA<<<1, 1>>>();
-    // cudaDeviceSynchronize();
 }
 
 template<>
