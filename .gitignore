@@ -6,7 +6,7 @@
 build
 build-*
 _site
-.ccls-cache/
 compile_commands.json
 .private.key
 result
+symmetry/.cache/

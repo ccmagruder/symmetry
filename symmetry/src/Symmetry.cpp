@@ -1,7 +1,6 @@
 // Copyright 2022 Caleb Magruder
 
 #include <iostream>
-#include <fstream>
 
 #include "ColorMap.h"
 #include "Image.hpp"

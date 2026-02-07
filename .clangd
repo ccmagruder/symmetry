@@ -1,13 +1,12 @@
 CompileFlags:
   Add:
-    - -xcuda
-    - --cuda-gpu-arch=sm_50
     - -std=c++17
     - -I/home/remote/symmetry/symmetry/include
-    - -isystem/nix/store/mjf8jlq9grydcdvyw6hb063x5c34g5gf-gcc-15.2.0/include/c++/15.2.0
-    - -isystem/nix/store/mjf8jlq9grydcdvyw6hb063x5c34g5gf-gcc-15.2.0/include/c++/15.2.0/x86_64-unknown-linux-gnu
   Remove:
     - -forward-unknown-to-host-compiler
     - --options-file
     - --generate-code*
     - -Xcompiler*
+    - -x
+    - cu
+    - cuda

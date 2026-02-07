@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <iostream>
 #include <limits>
+#include <stdexcept>
 
 template <typename T, int COLORS>
 class Pixel {

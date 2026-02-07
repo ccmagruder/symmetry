@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -10,9 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "Color.h"
 #include "Pixel.hpp"
-#include "PBar.h"
 
 template <typename S, typename T>
 static constexpr S cast(const T& in) {
