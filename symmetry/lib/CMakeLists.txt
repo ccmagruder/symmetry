@@ -10,15 +10,21 @@ set(SYMMETRY_SRCS
     ${CMAKE_SOURCE_DIR}/src/PBar.cpp
 )
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(LIB_TYPE SHARED)
+else()
+    set(LIB_TYPE STATIC)
+endif()
+
 if(CMAKE_CUDA_COMPILER)
-    add_library(Symmetry SHARED
+    add_library(Symmetry ${LIB_TYPE}
         ${SYMMETRY_SRCS}
         ${CMAKE_SOURCE_DIR}/src/Complex.cu
     )
     target_link_libraries(Symmetry cublas)
     target_compile_definitions(Symmetry PUBLIC CMAKE_CUDA_COMPILER)
 else()
-    add_library(Symmetry SHARED
+    add_library(Symmetry ${LIB_TYPE}
         ${SYMMETRY_SRCS}
     )
 endif()
