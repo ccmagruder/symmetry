@@ -30,7 +30,7 @@
 
         buildInputs = with pkgs; [
           claude-code-nix.packages.${system}.claude-code
-          ccls
+          clang-tools  # provides clangd
           zsh
         ];
 
