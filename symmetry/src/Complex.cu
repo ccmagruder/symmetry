@@ -46,7 +46,7 @@ void Complex<gpuDouble>::_memcpyHostToDevice() const {
 //
 // Transfers 2*N double values from the device pointer to the host pointer.
 template<>
-void Complex<gpuDouble>::_memcpyDeviceToHost() {
+void Complex<gpuDouble>::_memcpyDeviceToHost() const {
     cudaMemcpy(this->_ptr,
                this->_dptr,
                2 * this->_N * sizeof(Type),

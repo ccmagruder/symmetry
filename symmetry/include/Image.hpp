@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
-#include <ostream>
+#include <iostream>
 #include <string>
 #include <vector>
 

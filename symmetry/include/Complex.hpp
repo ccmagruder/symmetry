@@ -100,6 +100,8 @@ class Complex{
         assert(this->_dptr == nullptr);
     }
 
+    enum class Memory { Device, Host };  // Current memory location
+
     Complex& operator=(const Complex<T>&) = delete;
     Complex& operator=(const Complex<T>&&) = delete;
 
@@ -112,7 +114,7 @@ class Complex{
     //   True if all values match exactly, false otherwise.
     bool operator==(std::initializer_list<Type> l) const {
         using Iter = typename std::initializer_list<Type>::const_iterator;
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        const Type* ptr = reinterpret_cast<const Type*>(this->_ptr);
         for (Iter i = l.begin(); i < l.end(); i++) {
             if (*ptr != *i) {
                 return false;
@@ -238,43 +240,6 @@ class Complex{
         return *this;
     }
 
-    // Element-wise addition of two Complex arrays.
-    friend Complex<T> operator+(const Complex<T>& x, const Complex<T>& y) {
-        assert(x._N == y._N);
-        return Complex<T>(x) += y;
-    }
-
-    // Element-wise multiplication of two Complex arrays.
-    friend Complex<T> operator*(const Complex<T>& x, const Complex<T>& y) {
-        assert(x._N == y._N);
-        return Complex<T>(x) *= y;
-    }
-
-    // Scalar multiplication of a Complex array.
-    friend Complex<T> operator*(const ComplexType& a, const Complex<T>& x) {
-        return Complex<T>(x) *= a;
-    }
-
-    // Returns a new Complex array with element-wise absolute values.
-    friend Complex<T> abs(const Complex<T>& x) {
-        return Complex<T>(x).abs();
-    }
-
-    // Returns a new Complex array with element-wise arguments.
-    friend Complex<T> arg(const Complex<T>& x) {
-        return Complex<T>(x).arg();
-    }
-
-    // Returns a new Complex array with element-wise conjugates.
-    friend Complex<T> conj(const Complex<T>& x) {
-        return Complex<T>(x).conj();
-    }
-
-    // Returns a new Complex array with element-wise cosines.
-    friend Complex<T> cos(const Complex<T>& x) {
-        return Complex<T>(x).cos();
-    }
-
     // Outputs the Complex array to a stream.
     friend std::ostream& operator<<(std::ostream& os, const Complex<T>& c) {
         os << "Complex<T>{";
@@ -297,15 +262,13 @@ class Complex{
     void _memcpyHostToDevice() const {}
 
     // Copies data from device to host. No-op for CPU types.
-    void _memcpyDeviceToHost() {}
+    void _memcpyDeviceToHost() const {}
 
     size_t _N;
     void* _ptr;     // Host pointer
     void* _dptr;    // Device pointer
     void* _handle;  // Device context
  
-    enum class Memory { Device, Host };  // Current memory location
-
     volatile Memory _memory;
 };
 
@@ -313,7 +276,7 @@ class Complex{
 template<> void Complex<gpuDouble>::_dmalloc();
 template<> void Complex<gpuDouble>::_dfree();
 template<> void Complex<gpuDouble>::_memcpyHostToDevice() const;
-template<> void Complex<gpuDouble>::_memcpyDeviceToHost();
+template<> void Complex<gpuDouble>::_memcpyDeviceToHost() const;
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);
 template<>
