@@ -49,8 +49,6 @@ CublasHandleSingleton::operator cublasHandle_t() { return this->_handle; }
 //   Reference to this array after addition.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& other) {
-    this->_memcpyHostToDevice();
-    other._memcpyHostToDevice();
     static constexpr double alpha = 1.0;
     cublasDaxpy(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),  // handle
@@ -60,7 +58,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& oth
         1,                                                         // incx
         reinterpret_cast<double*>(this->_dptr),                    // y
         1);                                                        // incy
-    this->_memcpyDeviceToHost();
     return *this;
 }
 
@@ -125,12 +122,14 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
 //   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::abs() {
+    this->_memcpyDeviceToHost();
     const cuDoubleComplex* cptr = reinterpret_cast<const cuDoubleComplex*>(this->_ptr);
     double* ptr = reinterpret_cast<double*>(this->_ptr);
     for (ptrdiff_t i = 0; i < this->_N; i++) {
         *ptr++ = cuCabs(*cptr++);
         *ptr++ = 0;
     }
+    this->_memcpyHostToDevice();
     return *this;
 }
 
@@ -143,11 +142,13 @@ Complex<gpuDouble>& Complex<gpuDouble>::abs() {
 //   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::arg() {
+    this->_memcpyDeviceToHost();
     double* ptr = reinterpret_cast<double*>(this->_ptr);
     for (ptrdiff_t i = 0; i < this->_N; i++) {
         *ptr++ = atan2(ptr[1], ptr[0]);
         *ptr++ = 0;
     }
+    this->_memcpyHostToDevice();
     return *this;
 }
 
@@ -160,10 +161,12 @@ Complex<gpuDouble>& Complex<gpuDouble>::arg() {
 //   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::conj() {
+    this->_memcpyDeviceToHost();
     cuDoubleComplex* cptr = reinterpret_cast<cuDoubleComplex*>(this->_ptr);
     for (ptrdiff_t i = 0; i < this->_N; i++) {
         *cptr++ = cuConj(*cptr);
     }
+    this->_memcpyHostToDevice();
     return *this;
 }
 
@@ -176,10 +179,12 @@ Complex<gpuDouble>& Complex<gpuDouble>::conj() {
 //   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::cos() {
+    this->_memcpyDeviceToHost();
     double* ptr = reinterpret_cast<double*>(this->_ptr);
     for (ptrdiff_t i = 0; i < this->_N; i++) {
         *ptr++ = std::cos(*ptr);
         ptr++;
     }
+    this->_memcpyHostToDevice();
     return *this;
 }

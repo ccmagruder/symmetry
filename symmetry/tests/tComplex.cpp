@@ -41,17 +41,6 @@ TYPED_TEST(tComplex, CtorInitializerList) {
     EXPECT_NE(vec, List({3, 4, 1.5, -1}));
 }
 
-// Tests the copy constructor.
-//
-// Verifies that copying a Complex array creates an independent copy
-// with identical values.
-TYPED_TEST(tComplex, CopyCtor) {
-    using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{1, -1, 0, 1};
-    Complex<TypeParam> vec2(vec1);
-    EXPECT_EQ(vec2, std::initializer_list<Type>({1, -1, 0, 1}));
-}
-
 // Tests element-wise addition of two Complex arrays.
 //
 // Verifies that operator+ correctly adds corresponding complex elements.

@@ -70,16 +70,7 @@ class Complex{
         this->_dmalloc();
     }
 
-    // Copy constructor. Deep copies the data from other.
-    //
-    // Args:
-    //   other: The Complex array to copy from.
-    Complex(const Complex<T>& other) : Complex(other._N) {
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
-        Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
-        memcpy(ptr, other_ptr, 2 * this->_N * sizeof(Type));
-    }
-
+    explicit Complex(const Complex<T>&) = delete;
     explicit Complex(const Complex<T>&&) = delete;
 
     // Constructs a Complex array from an initializer list.
@@ -92,6 +83,7 @@ class Complex{
         for (Iter i = l.begin(); i < l.end(); i++) {
             *ptr++ = *i;
         }
+        this->_memcpyHostToDevice();
     }
 
     ~Complex() {
@@ -99,8 +91,6 @@ class Complex{
         this->_dfree();
         assert(this->_dptr == nullptr);
     }
-
-    enum class Memory { Device, Host };  // Current memory location
 
     Complex& operator=(const Complex<T>&) = delete;
     Complex& operator=(const Complex<T>&&) = delete;
@@ -114,6 +104,7 @@ class Complex{
     //   True if all values match exactly, false otherwise.
     bool operator==(std::initializer_list<Type> l) const {
         using Iter = typename std::initializer_list<Type>::const_iterator;
+        this->_memcpyDeviceToHost();
         const Type* ptr = reinterpret_cast<const Type*>(this->_ptr);
         for (Iter i = l.begin(); i < l.end(); i++) {
             if (*ptr != *i) {
@@ -132,6 +123,7 @@ class Complex{
     // Returns:
     //   Reference to the i-th complex number.
     const ComplexType& operator[](ptrdiff_t i) const {
+        this->_memcpyDeviceToHost();
         return *(reinterpret_cast<const ComplexType*>(this->_ptr) + i);
     }
 
@@ -268,8 +260,6 @@ class Complex{
     void* _ptr;     // Host pointer
     void* _dptr;    // Device pointer
     void* _handle;  // Device context
- 
-    volatile Memory _memory;
 };
 
 // GPU-accelerated specializations for Complex<gpuDouble>.
