@@ -1,10 +1,23 @@
+// Copyright 2023 Caleb Magruder
+//
+// cuBLAS handle management and GPU-accelerated Complex operations.
+//
+// This file contains the CublasHandleSingleton implementation and
+// GPU-accelerated template specializations for arithmetic and mathematical
+// operations on Complex<gpuDouble> arrays.
+
 #include "cublas_v2.h"
 #include <cassert>
 #include "Complex.hpp"
 
+// Static member definitions for CublasHandleSingleton.
 cublasHandle_t CublasHandleSingleton::_handle;
 int CublasHandleSingleton::_count = 0;
 
+// Constructs or increments reference to the shared cuBLAS handle.
+//
+// On first construction, creates the cuBLAS handle. Subsequent constructions
+// increment the reference count without creating a new handle.
 CublasHandleSingleton::CublasHandleSingleton() {
     if (CublasHandleSingleton::_count++ == 0) {
         cublasStatus_t status = cublasCreate(&CublasHandleSingleton::_handle);
@@ -12,14 +25,28 @@ CublasHandleSingleton::CublasHandleSingleton() {
     }
 }
 
+// Decrements reference count and destroys the cuBLAS handle when zero.
+//
+// When the last reference is released, the cuBLAS handle is destroyed.
 CublasHandleSingleton::~CublasHandleSingleton() {
     if (--CublasHandleSingleton::_count == 0) {
         cublasDestroy(CublasHandleSingleton::_handle);
     }
 }
 
+// Returns the underlying cuBLAS handle for use with cuBLAS API calls.
 CublasHandleSingleton::operator cublasHandle_t() { return this->_handle; }
 
+// GPU-accelerated element-wise addition using cuBLAS.
+//
+// Copies both arrays to GPU, performs y = y + x using cublasDaxpy,
+// and copies the result back to host memory.
+//
+// Args:
+//   other: The Complex array to add to this array.
+//
+// Returns:
+//   Reference to this array after addition.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& other) {
     this->_memcpyHostToDevice();
@@ -37,6 +64,16 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& oth
     return *this;
 }
 
+// GPU-accelerated element-wise multiplication using cuBLAS.
+//
+// Copies both arrays to GPU, performs element-wise complex multiplication
+// using cublasZdgmm, and copies the result back to host memory.
+//
+// Args:
+//   other: The Complex array to multiply element-wise with this array.
+//
+// Returns:
+//   Reference to this array after multiplication.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& other) {
     this->_memcpyHostToDevice();
@@ -56,6 +93,16 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
     return *this;
 }
 
+// GPU-accelerated scalar multiplication using cuBLAS.
+//
+// Copies array to GPU, scales all elements by the complex scalar a
+// using cublasZscal, and copies the result back to host memory.
+//
+// Args:
+//   a: The complex scalar to multiply all elements by.
+//
+// Returns:
+//   Reference to this array after scaling.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a) {
     this->_memcpyHostToDevice();
@@ -69,6 +116,13 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
     return *this;
 }
 
+// Computes element-wise absolute value (magnitude) in place.
+//
+// Uses cuCabs for GPU-compatible complex magnitude computation.
+// Stores the magnitude in the real part, sets imaginary part to zero.
+//
+// Returns:
+//   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::abs() {
     const cuDoubleComplex* cptr = reinterpret_cast<const cuDoubleComplex*>(this->_ptr);
@@ -80,6 +134,13 @@ Complex<gpuDouble>& Complex<gpuDouble>::abs() {
     return *this;
 }
 
+// Computes element-wise argument (phase angle) in place.
+//
+// Computes atan2(imag, real) for each complex number.
+// Stores the argument in the real part, sets imaginary part to zero.
+//
+// Returns:
+//   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::arg() {
     double* ptr = reinterpret_cast<double*>(this->_ptr);
@@ -90,6 +151,13 @@ Complex<gpuDouble>& Complex<gpuDouble>::arg() {
     return *this;
 }
 
+// Computes element-wise complex conjugate in place.
+//
+// Uses cuConj for GPU-compatible complex conjugation.
+// Negates the imaginary part of each complex number.
+//
+// Returns:
+//   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::conj() {
     cuDoubleComplex* cptr = reinterpret_cast<cuDoubleComplex*>(this->_ptr);
@@ -99,6 +167,13 @@ Complex<gpuDouble>& Complex<gpuDouble>::conj() {
     return *this;
 }
 
+// Computes element-wise cosine of the real part in place.
+//
+// Applies std::cos to the real part of each complex number.
+// The imaginary part is not modified.
+//
+// Returns:
+//   Reference to this array after the operation.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::cos() {
     double* ptr = reinterpret_cast<double*>(this->_ptr);
