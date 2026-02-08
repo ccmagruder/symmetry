@@ -19,6 +19,7 @@ endif()
 if(CMAKE_CUDA_COMPILER)
     add_library(Symmetry ${LIB_TYPE}
         ${SYMMETRY_SRCS}
+        ${CMAKE_SOURCE_DIR}/src/Complex.cpp
         ${CMAKE_SOURCE_DIR}/src/Complex.cu
     )
     target_link_libraries(Symmetry cublas)

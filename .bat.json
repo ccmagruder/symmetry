@@ -1,4 +1,5 @@
 {
   "build": "[[ -d symmetry/build ]] && rm -rf symmetry/build || return 0 && cmake -B symmetry/build symmetry && cmake --build symmetry/build && ctest --test-dir symmetry/build && symmetry/build/tests/bComplex",
-  "test": "cmake --build symmetry/build && ctest --test-dir symmetry/build"
+  "test": "cmake --build symmetry/build && ctest --test-dir symmetry/build",
+  "run": "symmetry/build/tests/bComplex"
 }
