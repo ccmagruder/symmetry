@@ -7,6 +7,20 @@
 #include <cstring>
 #include <iostream>
 
+#include "cublas_v2.h"
+
+class CublasHandleSingleton {
+ public:
+    CublasHandleSingleton();
+
+    ~CublasHandleSingleton();
+
+    operator cublasHandle_t();
+ private:
+    static cublasHandle_t _handle;
+    static int _count;
+};
+
 class gpuDouble {};
 
 template <typename T>
