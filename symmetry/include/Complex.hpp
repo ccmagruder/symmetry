@@ -5,6 +5,7 @@
 #include <cassert>
 #include <complex>
 #include <cstring>
+#include <iostream>
 
 class gpuDouble {};
 

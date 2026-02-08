@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <bit>
+#include <cstdint>
 #include <string>
 
 class Param {

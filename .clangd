@@ -1,0 +1,12 @@
+CompileFlags:
+  Add:
+    - -std=c++17
+    - -I/home/remote/symmetry/symmetry/include
+  Remove:
+    - -forward-unknown-to-host-compiler
+    - --options-file
+    - --generate-code*
+    - -Xcompiler*
+    - -x
+    - cu
+    - cuda

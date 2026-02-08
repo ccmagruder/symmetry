@@ -1,7 +1,6 @@
 // Copyright 2023 Caleb Magruder
 
 #include <cuComplex.h>
-#include <stdio.h>
 
 #include "Complex.hpp"
 #include "cublas_v2.h"
@@ -143,7 +142,7 @@ Complex<gpuDouble>& Complex<gpuDouble>::cos() {
     double* ptr = reinterpret_cast<double*>(this->_ptr);
     for (ptrdiff_t i = 0; i < this->_N; i++) {
         *ptr++ = std::cos(*ptr);
-        *ptr++;
+        ptr++;
     }
     return *this;
 }

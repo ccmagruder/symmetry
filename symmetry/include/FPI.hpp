@@ -8,6 +8,7 @@
 #include "Complex.hpp"
 #include "Image.hpp"
 #include "Param.h"
+#include "PBar.h"
 
 template <typename T = double>
 class FPI : public Image<uint64_t, 1>{
