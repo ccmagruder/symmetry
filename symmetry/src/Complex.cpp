@@ -99,14 +99,12 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
 //   Reference to this array after scaling.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a) {
-    this->_memcpyHostToDevice();
     cublasZscal(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),     // handle
         this->_N,                                                     // n
         reinterpret_cast<const cuDoubleComplex*>(&a),                 // alpha
         reinterpret_cast<cuDoubleComplex*>(this->_dptr),              // x
         1);                                                           // incx
-    this->_memcpyDeviceToHost();
     return *this;
 }
 
