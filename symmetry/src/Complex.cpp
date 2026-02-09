@@ -73,8 +73,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& oth
 //   Reference to this array after multiplication.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& other) {
-    this->_memcpyHostToDevice();
-    other._memcpyHostToDevice();
     cublasZdgmm(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),  // handle
         CUBLAS_SIDE_LEFT,                                          // mode
@@ -86,7 +84,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
         1,                                                         // incx
         reinterpret_cast<cuDoubleComplex*>(this->_dptr),           // C
         this->_N);                                                 // ldc
-    this->_memcpyDeviceToHost();
     return *this;
 }
 
