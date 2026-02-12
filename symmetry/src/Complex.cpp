@@ -108,26 +108,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
     return *this;
 }
 
-// Computes element-wise absolute value (magnitude) in place.
-//
-// Uses cuCabs for GPU-compatible complex magnitude computation.
-// Stores the magnitude in the real part, sets imaginary part to zero.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::abs() {
-    this->_memcpyDeviceToHost();
-    const cuDoubleComplex* cptr = reinterpret_cast<const cuDoubleComplex*>(this->_ptr);
-    double* ptr = reinterpret_cast<double*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *ptr++ = cuCabs(*cptr++);
-        *ptr++ = 0;
-    }
-    this->_memcpyHostToDevice();
-    return *this;
-}
-
 // Computes element-wise argument (phase angle) in place.
 //
 // Computes atan2(imag, real) for each complex number.

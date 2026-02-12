@@ -8,7 +8,6 @@
 #include <cuComplex.h>
 
 #include "Complex.hpp"
-#include "cublas_v2.h"
 
 // Allocates GPU memory for the complex array.
 //
@@ -51,4 +50,29 @@ void Complex<gpuDouble>::_memcpyDeviceToHost() const {
                this->_dptr,
                2 * this->_N * sizeof(Type),
                cudaMemcpyDeviceToHost);
+}
+
+// Computes element-wise absolute value (magnitude) in place.
+//
+// Uses cuCabs for GPU-compatible complex magnitude computation.
+// Stores the magnitude in the real part, sets imaginary part to zero.
+//
+// Returns:
+//   Reference to this array after the operation.
+__global__ void gpuDoubleAbs(cuDoubleComplex* data, int n) {
+    double* ptr = reinterpret_cast<double*>(data);
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        ptr[2*i] = cuCabs(data[i]);
+        ptr[2*i+1] = 0;
+    }
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::abs() {
+    cuDoubleComplex* ptr = reinterpret_cast<cuDoubleComplex*>(this->_dptr);
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    gpuDoubleAbs<<<blocks, threads>>>(ptr, this->_N);
+    return *this;
 }

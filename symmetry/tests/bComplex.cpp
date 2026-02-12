@@ -113,3 +113,37 @@ BENCHMARK_TEMPLATE(bComplexScalarMultiplication, gpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 #endif
+
+////////////////////////////////////////////////////////
+//////////////////////////ABS///////////////////////////
+////////////////////////////////////////////////////////
+
+// Benchmarks absolute values of Complex arrays.
+//
+// Measures the time to perform absolute values (x[i] = |x|, x[i+1] = 0)
+// for arrays of varying sizes. The size is controlled by state.range(0).
+//
+// Args:
+//   state: Benchmark state containing the array size in range(0).
+template <typename T>
+void bComplexAbs(benchmark::State& state) {  // NOLINT
+    Complex<T> x(state.range(0));
+    std::complex<double> a(state.range(0));
+    for (auto _ : state)
+        x.abs();
+}
+
+// CPU benchmark: Complex<double> multiplication.
+// Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
+BENCHMARK_TEMPLATE(bComplexAbs, double)
+    ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
+    ->Unit(benchmark::kMicrosecond);
+
+// GPU benchmark: Complex<gpuDouble> multiplication.
+// Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
+// Only enabled when CUDA compiler is available.
+#ifdef CMAKE_CUDA_COMPILER
+BENCHMARK_TEMPLATE(bComplexAbs, gpuDouble)
+    ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
+    ->Unit(benchmark::kMicrosecond);
+#endif
