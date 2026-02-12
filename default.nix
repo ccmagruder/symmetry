@@ -1,5 +1,5 @@
 # default.nix
-{ lib, stdenv, cmake, cudaPackages, gtest, gbenchmark, makeWrapper, json }:
+{ lib, stdenv, cmake, cudaPackages, gtest, gbenchmark, makeWrapper, json, ninja }:
 
 stdenv.mkDerivation {
   pname = "symmetry";
@@ -22,6 +22,7 @@ stdenv.mkDerivation {
     gtest
     gbenchmark
     json
+    ninja
   ];
 
   doCheck = true;
