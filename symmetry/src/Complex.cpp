@@ -108,25 +108,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
     return *this;
 }
 
-// Computes element-wise argument (phase angle) in place.
-//
-// Computes atan2(imag, real) for each complex number.
-// Stores the argument in the real part, sets imaginary part to zero.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::arg() {
-    this->_memcpyDeviceToHost();
-    double* ptr = reinterpret_cast<double*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *ptr++ = atan2(ptr[1], ptr[0]);
-        *ptr++ = 0;
-    }
-    this->_memcpyHostToDevice();
-    return *this;
-}
-
 // Computes element-wise complex conjugate in place.
 //
 // Uses cuConj for GPU-compatible complex conjugation.

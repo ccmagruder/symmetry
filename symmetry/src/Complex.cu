@@ -76,3 +76,29 @@ Complex<gpuDouble>& Complex<gpuDouble>::abs() {
     gpuDoubleAbs<<<blocks, threads>>>(ptr, this->_N);
     return *this;
 }
+
+// Computes element-wise argument (phase angle) in place.
+//
+// Computes atan2(imag, real) for each complex number.
+// Stores the argument in the real part, sets imaginary part to zero.
+//
+// Returns:
+//   Reference to this array after the operation.
+__global__ void gpuDoubleArg(cuDoubleComplex* data, int n) {
+    double* ptr = reinterpret_cast<double*>(data);
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        ptr[2*i] = atan2(ptr[2*i+1], ptr[2*i]);
+        ptr[2*i+1] = 0;
+    }
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::arg() {
+    cuDoubleComplex* ptr = reinterpret_cast<cuDoubleComplex*>(this->_dptr);
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    gpuDoubleArg<<<blocks, threads>>>(ptr, this->_N);
+    return *this;
+}
+
