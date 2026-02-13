@@ -181,3 +181,37 @@ BENCHMARK_TEMPLATE(bComplexArg, gpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 #endif
+
+////////////////////////////////////////////////////////
+/////////////////////////CONJ///////////////////////////
+////////////////////////////////////////////////////////
+
+// Benchmarks element-wise complex conjugate of Complex arrays.
+//
+// Measures the time to perform complex conjugates (x[i] = arg(x), x[i+1] = 0)
+// for arrays of varying sizes. The size is controlled by state.range(0).
+//
+// Args:
+//   state: Benchmark state containing the array size in range(0).
+template <typename T>
+void bComplexConj(benchmark::State& state) {  // NOLINT
+    Complex<T> x(state.range(0));
+    std::complex<double> a(state.range(0));
+    for (auto _ : state)
+        x.conj();
+}
+
+// CPU benchmark: Complex<double> multiplication.
+// Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
+BENCHMARK_TEMPLATE(bComplexConj, double)
+    ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
+    ->Unit(benchmark::kMicrosecond);
+
+// GPU benchmark: Complex<gpuDouble> multiplication.
+// Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
+// Only enabled when CUDA compiler is available.
+#ifdef CMAKE_CUDA_COMPILER
+BENCHMARK_TEMPLATE(bComplexConj, gpuDouble)
+    ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
+    ->Unit(benchmark::kMicrosecond);
+#endif

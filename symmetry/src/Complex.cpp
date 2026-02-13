@@ -108,24 +108,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
     return *this;
 }
 
-// Computes element-wise complex conjugate in place.
-//
-// Uses cuConj for GPU-compatible complex conjugation.
-// Negates the imaginary part of each complex number.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::conj() {
-    this->_memcpyDeviceToHost();
-    cuDoubleComplex* cptr = reinterpret_cast<cuDoubleComplex*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *cptr++ = cuConj(*cptr);
-    }
-    this->_memcpyHostToDevice();
-    return *this;
-}
-
 // Computes element-wise cosine of the real part in place.
 //
 // Applies std::cos to the real part of each complex number.

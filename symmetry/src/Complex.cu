@@ -102,3 +102,26 @@ Complex<gpuDouble>& Complex<gpuDouble>::arg() {
     return *this;
 }
 
+// Computes element-wise complex conjugate in place.
+//
+// Uses cuConj for GPU-compatible complex conjugation.
+// Negates the imaginary part of each complex number.
+//
+// Returns:
+//   Reference to this array after the operation.
+__global__ void gpuDoubleConj(cuDoubleComplex* data, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        data[i] = cuConj(data[i]);
+    }
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::conj() {
+    cuDoubleComplex* ptr = reinterpret_cast<cuDoubleComplex*>(this->_dptr);
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    gpuDoubleConj<<<blocks, threads>>>(ptr, this->_N);
+    return *this;
+}
+
