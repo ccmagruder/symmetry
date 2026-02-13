@@ -125,3 +125,26 @@ Complex<gpuDouble>& Complex<gpuDouble>::conj() {
     return *this;
 }
 
+// Computes element-wise cosine of the real part in place.
+//
+// Applies std::cos to the real part of each complex number.
+// The imaginary part is not modified.
+//
+// Returns:
+//   Reference to this array after the operation.
+__global__ void gpuDoubleCos(cuDoubleComplex* data, int n) {
+    double* ptr = reinterpret_cast<double*>(data);
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        ptr[2*i] = cos(ptr[2*i]);
+    }
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::cos() {
+    cuDoubleComplex* ptr = reinterpret_cast<cuDoubleComplex*>(this->_dptr);
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    gpuDoubleCos<<<blocks, threads>>>(ptr, this->_N);
+    return *this;
+}

@@ -108,21 +108,3 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a
     return *this;
 }
 
-// Computes element-wise cosine of the real part in place.
-//
-// Applies std::cos to the real part of each complex number.
-// The imaginary part is not modified.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::cos() {
-    this->_memcpyDeviceToHost();
-    double* ptr = reinterpret_cast<double*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *ptr++ = std::cos(*ptr);
-        ptr++;
-    }
-    this->_memcpyHostToDevice();
-    return *this;
-}
