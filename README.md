@@ -34,3 +34,16 @@ cmake --build build
 1. 2560 x 1440 16:9 Quad HD, QHD, 2.5K, 1440p
 1. 1920 x 1080 16:9 Full HD, FHD, 2K, 1080p
 
+# Mathematics of Chaos
+
+Given real-valued parameters $\alpha$, $\beta$, $\gamma$, $\lambda$, and $\omega$, define the fixed point iteration $z^+ = F(z)$ where
+```math
+F(z) = \left (\lambda + \alpha z \overline{z} + \beta \textrm{Re}(z^n) + \omega i + \delta \textrm{Re}\left ( \left [\frac{z}{|z|} \right ]^{np} \right ) |z| \right ) z + \gamma \overline{z}^{n-1}.
+```
+To compute the function $F(z)$ the code expresses two terms in equivalent but computationally friendly ways:
+```math
+\begin{align}
+    \textrm{Re}\left ( \left [\frac{z}{|z|} \right ]^{np} \right ) &= \cos ( np|z|\textsf{arg}(z) ), \\\\
+    \overline{z}^{n-1} &= \textrm{conj}(z^{n-1}).
+\end{align}
+```
