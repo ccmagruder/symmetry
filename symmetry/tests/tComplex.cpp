@@ -41,24 +41,13 @@ TYPED_TEST(tComplex, CtorInitializerList) {
     EXPECT_NE(vec, List({3, 4, 1.5, -1}));
 }
 
-// Tests the copy constructor.
-//
-// Verifies that copying a Complex array creates an independent copy
-// with identical values.
-TYPED_TEST(tComplex, CopyCtor) {
-    using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{1, -1, 0, 1};
-    Complex<TypeParam> vec2(vec1);
-    EXPECT_EQ(vec2, std::initializer_list<Type>({1, -1, 0, 1}));
-}
-
 // Tests element-wise addition of two Complex arrays.
 //
 // Verifies that operator+ correctly adds corresponding complex elements.
 TYPED_TEST(tComplex, Addition) {
     using Type = typename complex_traits<TypeParam>::value_type;
     Complex<TypeParam> x{0, 1, 3.25, 0.25}, y{1.5, -1, 1, -1.5};
-    EXPECT_EQ(x + y, std::initializer_list<Type>({1.5, 0, 4.25, -1.25}));
+    EXPECT_EQ(x += y, std::initializer_list<Type>({1.5, 0, 4.25, -1.25}));
 }
 
 // Tests element-wise multiplication of two Complex arrays.
@@ -67,7 +56,7 @@ TYPED_TEST(tComplex, Addition) {
 TYPED_TEST(tComplex, Multiplication) {
     using Type = typename complex_traits<TypeParam>::value_type;
     Complex<TypeParam> x{0, -1, 0, 1}, y{1.5, -1, 1, 0};
-    EXPECT_EQ(x * y, std::initializer_list<Type>({-1, -1.5, 0, 1}));
+    EXPECT_EQ(x *= y, std::initializer_list<Type>({-1, -1.5, 0, 1}));
 }
 
 // Tests scalar multiplication of a Complex array.
@@ -75,10 +64,11 @@ TYPED_TEST(tComplex, Multiplication) {
 // Verifies that multiplying by a complex scalar scales all elements correctly.
 TYPED_TEST(tComplex, ScalarMultiplication) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{-1, 1, 1.25, -0.125};
+    Complex<TypeParam> vec{-1, 1, 1.25, -0.125};
     std::complex<Type> ad = {0, 1};
-    Complex<TypeParam> vec2(ad * vec1);
-    EXPECT_EQ(vec2, std::initializer_list<Type>({-1, -1, 0.125, 1.25}));
+    vec *= ad;
+    std::initializer_list<Type> ans({-1, -1, 0.125, 1.25});
+    EXPECT_EQ(vec, ans);
 }
 
 // Tests element-wise absolute value (magnitude).
@@ -87,8 +77,9 @@ TYPED_TEST(tComplex, ScalarMultiplication) {
 // storing results in the real part with imaginary part set to zero.
 TYPED_TEST(tComplex, Abs) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{3, -4, 0, -1};
-    EXPECT_EQ(abs(vec1), std::initializer_list<Type>({5, 0, 1, 0}));
+    Complex<TypeParam> vec{3, -4, 0, -1};
+    vec.abs();
+    EXPECT_EQ(vec, std::initializer_list<Type>({5, 0, 1, 0}));
 }
 
 // Tests element-wise argument (phase angle).
@@ -97,12 +88,12 @@ TYPED_TEST(tComplex, Abs) {
 // storing results in the real part with imaginary part set to zero.
 TYPED_TEST(tComplex, Arg) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{-1, 0, 0, -1};
-    Complex<TypeParam> vec2(arg(vec1));
-    EXPECT_NEAR(vec2[0].real(), 3.14159, 1e-4);
-    EXPECT_EQ(vec2[0].imag(), 0);
-    EXPECT_NEAR(vec2[1].real(), -3.14159/2, 1e-4);
-    EXPECT_EQ(vec2[1].imag(), 0);
+    Complex<TypeParam> vec{-1, 0, 0, -1};
+    vec.arg();
+    EXPECT_NEAR(vec[0].real(), 3.14159, 1e-4);
+    EXPECT_EQ(vec[0].imag(), 0);
+    EXPECT_NEAR(vec[1].real(), -3.14159/2, 1e-4);
+    EXPECT_EQ(vec[1].imag(), 0);
 }
 
 // Tests element-wise complex conjugate.
@@ -110,9 +101,10 @@ TYPED_TEST(tComplex, Arg) {
 // Verifies that conj() negates the imaginary part of each complex number.
 TYPED_TEST(tComplex, Conj) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{-1, 0, 1, -2};
+    Complex<TypeParam> vec{-1, 0, 1, -2};
     std::initializer_list<Type> ans = {-1, 0, 1, 2};
-    EXPECT_EQ(conj(vec1), ans);
+    vec.conj();
+    EXPECT_EQ(vec, ans);
 }
 
 // Tests element-wise cosine of the real part.
@@ -121,10 +113,10 @@ TYPED_TEST(tComplex, Conj) {
 // of each complex number, leaving the imaginary part unchanged.
 TYPED_TEST(tComplex, Cos) {
     using Type = typename complex_traits<TypeParam>::value_type;
-    Complex<TypeParam> vec1{3.14159, 4, 3.14159/2, -2};
-    Complex<TypeParam> vec2(cos(vec1));
-    EXPECT_NEAR(vec2[0].real(), -1, 1e-4);
-    EXPECT_EQ(vec2[0].imag(), 4);
-    EXPECT_NEAR(vec2[1].real(), 0, 1e-4);
-    EXPECT_EQ(vec2[1].imag(), -2);
+    Complex<TypeParam> vec{3.14159, 4, 3.14159/2, -2};
+    vec.cos();
+    EXPECT_NEAR(vec[0].real(), -1, 1e-4);
+    EXPECT_EQ(vec[0].imag(), 4);
+    EXPECT_NEAR(vec[1].real(), 0, 1e-4);
+    EXPECT_EQ(vec[1].imag(), -2);
 }

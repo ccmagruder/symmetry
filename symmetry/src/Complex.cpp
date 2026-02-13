@@ -49,8 +49,6 @@ CublasHandleSingleton::operator cublasHandle_t() { return this->_handle; }
 //   Reference to this array after addition.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& other) {
-    this->_memcpyHostToDevice();
-    other._memcpyHostToDevice();
     static constexpr double alpha = 1.0;
     cublasDaxpy(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),  // handle
@@ -60,7 +58,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& oth
         1,                                                         // incx
         reinterpret_cast<double*>(this->_dptr),                    // y
         1);                                                        // incy
-    this->_memcpyDeviceToHost();
     return *this;
 }
 
@@ -76,8 +73,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>& oth
 //   Reference to this array after multiplication.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& other) {
-    this->_memcpyHostToDevice();
-    other._memcpyHostToDevice();
     cublasZdgmm(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),  // handle
         CUBLAS_SIDE_LEFT,                                          // mode
@@ -89,7 +84,6 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
         1,                                                         // incx
         reinterpret_cast<cuDoubleComplex*>(this->_dptr),           // C
         this->_N);                                                 // ldc
-    this->_memcpyDeviceToHost();
     return *this;
 }
 
@@ -105,81 +99,12 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
 //   Reference to this array after scaling.
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a) {
-    this->_memcpyHostToDevice();
     cublasZscal(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),     // handle
         this->_N,                                                     // n
         reinterpret_cast<const cuDoubleComplex*>(&a),                 // alpha
         reinterpret_cast<cuDoubleComplex*>(this->_dptr),              // x
         1);                                                           // incx
-    this->_memcpyDeviceToHost();
     return *this;
 }
 
-// Computes element-wise absolute value (magnitude) in place.
-//
-// Uses cuCabs for GPU-compatible complex magnitude computation.
-// Stores the magnitude in the real part, sets imaginary part to zero.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::abs() {
-    const cuDoubleComplex* cptr = reinterpret_cast<const cuDoubleComplex*>(this->_ptr);
-    double* ptr = reinterpret_cast<double*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *ptr++ = cuCabs(*cptr++);
-        *ptr++ = 0;
-    }
-    return *this;
-}
-
-// Computes element-wise argument (phase angle) in place.
-//
-// Computes atan2(imag, real) for each complex number.
-// Stores the argument in the real part, sets imaginary part to zero.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::arg() {
-    double* ptr = reinterpret_cast<double*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *ptr++ = atan2(ptr[1], ptr[0]);
-        *ptr++ = 0;
-    }
-    return *this;
-}
-
-// Computes element-wise complex conjugate in place.
-//
-// Uses cuConj for GPU-compatible complex conjugation.
-// Negates the imaginary part of each complex number.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::conj() {
-    cuDoubleComplex* cptr = reinterpret_cast<cuDoubleComplex*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *cptr++ = cuConj(*cptr);
-    }
-    return *this;
-}
-
-// Computes element-wise cosine of the real part in place.
-//
-// Applies std::cos to the real part of each complex number.
-// The imaginary part is not modified.
-//
-// Returns:
-//   Reference to this array after the operation.
-template<>
-Complex<gpuDouble>& Complex<gpuDouble>::cos() {
-    double* ptr = reinterpret_cast<double*>(this->_ptr);
-    for (ptrdiff_t i = 0; i < this->_N; i++) {
-        *ptr++ = std::cos(*ptr);
-        ptr++;
-    }
-    return *this;
-}
