@@ -24,9 +24,7 @@ class FPI : public Image<uint64_t, 1>{
     // Constructs the FPI from a parameter set.
     //
     // Casts all parameters to the working precision type and seeds the orbit
-    // at z = (0, -0.12). The first 1e3 iterates are discarded as transients
-    // so the orbit settles onto the attractor before histogram accumulation
-    // begins.
+    // at z = (0, -0.12).
     //
     // Args:
     //   p:     Parameter set defining the map coefficients and image dimensions.
@@ -43,16 +41,16 @@ class FPI : public Image<uint64_t, 1>{
         this->_gamma = static_cast<Type>(_param.gamma);
         this->_n = static_cast<Type>(_param.n);
         this->_p = static_cast<Type>(_param.p);
-        this->_lambda = std::complex<Type>(_param.lambda, 0);
-        this->_omega = std::complex<Type>(0, _param.omega);
+        this->_lambda = _param.lambda;
+        this->_omega = _param.omega;
     }
 
     ~FPI() {}
 
     // Evaluates the chaotic map F(z).
     //
-    // The map has the general form:
-    //   F(z) = (lambda + alpha*|z|^2 + beta*Re(z^n) + omega
+    // The map has the general form, where mu = complex(lambda, omega):
+    //   F(z) = (mu + alpha*|z|^2 + beta*Re(z^n)
     //           + delta*cos(n*p*arg(z))*|z|) * z + gamma*conj(z)^{n-1}
     // The symmetry group of the attractor is determined by the integer
     // parameter n. Aborts if the orbit diverges to NaN; renormalizes if
@@ -65,7 +63,7 @@ class FPI : public Image<uint64_t, 1>{
     //   The next iterate F(z).
     std::complex<Type> F(std::complex<Type> z) {
         // Guard against divergence
-        if (std::isnan(real(_z))) exit(1);
+        if (std::isnan(z.real())) exit(1);
 
         // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
         this->_znm1 = z;
@@ -73,19 +71,19 @@ class FPI : public Image<uint64_t, 1>{
             this->_znm1 *= z;
         }
 
+        std::complex<Type> mu = std::complex<Type>(this->_lambda, this->_omega);
+
         // Evaluate the equivariant map:
-        //   Term 1: lambda * z                       — rotation/scaling
+        //   Term 1: mu * z                           — rotation/scaling
         //   Term 2: alpha * |z|^2 * z                — radial nonlinearity
         //   Term 3: beta * Re(z^n) * z               — n-fold symmetric coupling
-        //   Term 4: omega * z                         — imaginary rotation offset
-        //   Term 5: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
-        //   Term 6: gamma * conj(z)^{n-1}            — conjugate coupling
+        //   Term 4: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
+        //   Term 5: gamma * conj(z)^{n-1}            — conjugate coupling
         this->_znew = (
-                this->_lambda
+                mu
                 + this->_alpha * abs(z) * abs(z)
                 //+ _param.beta * real(pow(z, _param.n))
                 + this->_beta * real(z*this->_znm1)
-                + this->_omega
                 + std::complex<Type>(
                     this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
                     0
@@ -106,10 +104,11 @@ class FPI : public Image<uint64_t, 1>{
 
     // Runs the fixed-point iteration for niter steps.
     //
-    // Each iterate z is mapped to a pixel in the histogram image, incrementing
-    // the corresponding bin. Periodic perturbations break spurious cycles, and
-    // iterates that collapse onto the real or imaginary axis are nudged off to
-    // maintain coverage.
+    // Discards initial transient iterates so the orbit settles onto the
+    // attractor before accumulation. Each iterate z is then mapped to a pixel
+    // in the histogram image, incrementing the corresponding bin. Periodic
+    // perturbations break spurious cycles, and iterates that collapse onto
+    // the real or imaginary axis are nudged off to maintain coverage.
     //
     // Args:
     //   niter: Number of iterations to run.
@@ -191,16 +190,16 @@ class FPI : public Image<uint64_t, 1>{
 
  protected:
     std::complex<Type> _z;        // Current orbit iterate
-    uint64_t _init_iter = 10;  // Transient iterations before accumulation
-    bool _add_noise = true;
+    uint64_t _init_iter = 10;     // Transient iterations before accumulation
+    bool _add_noise = true;       // Whether to perturb the orbit to break cycles
 
  private:
     const Param _param;           // Configuration parameters for the map
 
     std::complex<Type> _znm1;     // Cached z^{n-1} used in F(z)
     std::complex<Type> _znew;     // Result of the latest map evaluation
-    std::complex<Type> _lambda;   // Complex linear coefficient (real part)
-    std::complex<Type> _omega;    // Complex linear coefficient (imag part)
+    Type _lambda;                 // Complex linear coefficient (real part)
+    Type _omega;                  // Complex linear coefficient (imag part)
     Type _alpha;                  // Coefficient for |z|^2 term
     Type _beta;                   // Coefficient for Re(z^n) term
     Type _delta;                  // Coefficient for angular modulation term
