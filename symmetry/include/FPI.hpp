@@ -10,16 +10,32 @@
 #include "Param.h"
 #include "PBar.h"
 
+// Fixed Point Iteration (FPI) class for generating symmetric chaotic attractors.
+//
+// Iterates a complex-valued map z_{k+1} = F(z_k) and accumulates a histogram
+// of orbit visits into a 64-bit grayscale image. The template parameter T
+// controls the floating-point precision (defaults to double).
 template <typename T = double>
 class FPI : public Image<uint64_t, 1>{
     using Type = typename complex_traits<T>::value_type;
 
  public:
+    // Constructs the FPI from a parameter set.
+    //
+    // Casts all parameters to the working precision type and seeds the orbit
+    // at z = (0, -0.12). The first 1e3 iterates are discarded as transients
+    // so the orbit settles onto the attractor before histogram accumulation
+    // begins.
+    //
+    // Args:
+    //   p:     Parameter set defining the map coefficients and image dimensions.
+    //   label: Label displayed on the progress bar.
     explicit FPI(Param p, const std::string& label = " FPI ")
         : Image(p.resy, p.resx),
           _param(p),
           _z(0, -0.12),
           _label(label) {
+        // Cast double-precision parameters to the working type T
         this->_alpha = static_cast<Type>(_param.alpha);
         this->_beta = static_cast<Type>(_param.beta);
         this->_delta = static_cast<Type>(_param.delta);
@@ -28,15 +44,26 @@ class FPI : public Image<uint64_t, 1>{
         this->_p = static_cast<Type>(_param.p);
         this->_lambda = std::complex<Type>(_param.lambda, 0);
         this->_omega = std::complex<Type>(0, _param.omega);
-        // Initialize 1e3 transient beginning
-        for (int i = 0; i < 1e3; i++) {
-            _z = F(_z);
-        }
     }
 
     ~FPI() {}
 
+    // Evaluates the chaotic map F(z).
+    //
+    // The map has the general form:
+    //   F(z) = (lambda + alpha*|z|^2 + beta*Re(z^n) + omega
+    //           + delta*cos(n*p*arg(z))*|z|) * z + gamma*conj(z)^{n-1}
+    // The symmetry group of the attractor is determined by the integer
+    // parameter n. Aborts if the orbit diverges to NaN; renormalizes if
+    // |z| exceeds 8 to keep the orbit bounded.
+    //
+    // Args:
+    //   z: The current complex iterate.
+    //
+    // Returns:
+    //   The next iterate F(z).
     std::complex<Type> F(std::complex<Type> z) {
+        // Guard against divergence
         if (std::isnan(real(_z))) exit(1);
 
         // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
@@ -45,6 +72,13 @@ class FPI : public Image<uint64_t, 1>{
             this->_znm1 *= z;
         }
 
+        // Evaluate the equivariant map:
+        //   Term 1: lambda * z                       — rotation/scaling
+        //   Term 2: alpha * |z|^2 * z                — radial nonlinearity
+        //   Term 3: beta * Re(z^n) * z               — n-fold symmetric coupling
+        //   Term 4: omega * z                         — imaginary rotation offset
+        //   Term 5: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
+        //   Term 6: gamma * conj(z)^{n-1}            — conjugate coupling
         this->_znew = (
                 this->_lambda
                 + this->_alpha * abs(z) * abs(z)
@@ -59,6 +93,7 @@ class FPI : public Image<uint64_t, 1>{
             //+ _param.gamma * pow(conj(z), _param.n - 1);
             + this->_gamma * conj(this->_znm1);
 
+        // Renormalize to prevent unbounded growth
         if (abs(this->_znew) > 8) {
             std::cerr << "Warning: abs(z)=" << abs(this->_znew)
                 << " renormalized to 1\n";
@@ -68,12 +103,27 @@ class FPI : public Image<uint64_t, 1>{
         return this->_znew;
     }
 
+    // Runs the fixed-point iteration for niter steps.
+    //
+    // Each iterate z is mapped to a pixel in the histogram image, incrementing
+    // the corresponding bin. Periodic perturbations break spurious cycles, and
+    // iterates that collapse onto the real or imaginary axis are nudged off to
+    // maintain coverage.
+    //
+    // Args:
+    //   niter: Number of iterations to run.
     void run_fpi(uint64_t niter) {
+        // Discard initial transient iterates to reach the attractor
+        for (int i = 0; i < 1e3; i++) {
+            _z = F(_z);
+        }
+
         PBar i(niter, 8, this->_label);
         for (i = 0; i < niter; i++) {
             _z = F(_z);
 
-            // For some figures cycles appear,add noise every 1000 iterations
+            // Perturb every 1000 iterations to break periodic cycles
+            // that can trap the orbit and leave gaps in the image
             if (static_cast<int>(i) % 1000 == 0) {
                 _z.real(_z.real() * 0.99 - 1e-2 * sgn(_z.real()));
                 _z.imag(_z.imag() * 0.99 - 1e-2 * sgn(_z.imag()));
@@ -81,8 +131,9 @@ class FPI : public Image<uint64_t, 1>{
                     _z = F(_z);
             }
 
-            // Imaginary axis sometimes closed under FPI
-            // Kicks iterate out of loop, re-initializes
+            // The real and imaginary axes can be invariant under the map.
+            // If the orbit collapses onto an axis, nudge it off and
+            // re-iterate to restore two-dimensional wandering.
             if (std::abs(real(_z)) < 1e-15) {
                 _z.real(0.001);
                 for (int j = 0; j < 1e1; j++)
@@ -95,6 +146,7 @@ class FPI : public Image<uint64_t, 1>{
                     _z = F(_z);
             }
 
+            // Map the complex iterate to pixel coordinates and accumulate
             double size = std::sqrt(_rows*_cols);
             int c = floor(_param.scale*size/2*real(_z) + _cols/2);
             int r = floor(_param.scale*size/2*imag(_z) + _rows/2);
@@ -104,11 +156,19 @@ class FPI : public Image<uint64_t, 1>{
         }
     }
 
+    // Convenience overload that runs for the default iteration count from Param.
     void run_fpi() { run_fpi(_param.n_iter); }
 
-    // Write to 16-bit *.pgm
+    // Writes the accumulated histogram to a 16-bit PGM image file.
+    //
+    // The 64-bit histogram counts are linearly rescaled to [0, UINT16_MAX],
+    // then a logarithmic rescale is applied to compress the dynamic range
+    // and reveal structure in low-count regions.
+    //
+    // Args:
+    //   filename: Output path for the PGM file.
     void write(const std::string& filename) const {
-        // Rescale 64-bit image to rescaled 16-bit
+        // Linearly rescale 64-bit histogram to 16-bit range
         Image<uint16_t, 1> im(_rows, _cols);
         uint64_t max = this->max();
         for (int r = 0; r < _rows; r++) {
@@ -117,30 +177,31 @@ class FPI : public Image<uint64_t, 1>{
                     static_cast<double>((*this)[r][c]) / max * __UINT16_MAX__);
             }
         }
-        // Balance colors by taking logarithm
+        // Apply log rescale to balance dynamic range across the image
         im.logRescale();
         im.write(filename);
     }
 
+    // Returns the sign of val: -1, 0, or +1.
     template <typename S>
     static int sgn(S val) {
         return (S(0) < val) - (val < S(0));
     }
 
  private:
-    const Param _param;
+    const Param _param;           // Configuration parameters for the map
 
-    std::complex<Type> _z;
-    std::complex<Type> _znm1;
-    std::complex<Type> _znew;
-    std::complex<Type> _lambda;
-    std::complex<Type> _omega;
-    Type _alpha;
-    Type _beta;
-    Type _delta;
-    Type _gamma;
-    Type _n;
-    Type _p;
+    std::complex<Type> _z;        // Current orbit iterate
+    std::complex<Type> _znm1;     // Cached z^{n-1} used in F(z)
+    std::complex<Type> _znew;     // Result of the latest map evaluation
+    std::complex<Type> _lambda;   // Complex linear coefficient (real part)
+    std::complex<Type> _omega;    // Complex linear coefficient (imag part)
+    Type _alpha;                  // Coefficient for |z|^2 term
+    Type _beta;                   // Coefficient for Re(z^n) term
+    Type _delta;                  // Coefficient for angular modulation term
+    Type _gamma;                  // Coefficient for conjugate coupling term
+    Type _n;                      // Symmetry order (n-fold rotational symmetry)
+    Type _p;                      // Angular frequency multiplier for delta term
 
-    const std::string _label;
+    const std::string _label;     // Label displayed on the progress bar
 };
