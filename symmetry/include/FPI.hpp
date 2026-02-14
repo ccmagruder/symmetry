@@ -17,6 +17,7 @@
 // controls the floating-point precision (defaults to double).
 template <typename T = double>
 class FPI : public Image<uint64_t, 1>{
+ protected:
     using Type = typename complex_traits<T>::value_type;
 
  public:
@@ -114,7 +115,7 @@ class FPI : public Image<uint64_t, 1>{
     //   niter: Number of iterations to run.
     void run_fpi(uint64_t niter) {
         // Discard initial transient iterates to reach the attractor
-        for (int i = 0; i < 1e3; i++) {
+        for (int i = 0; i < 1e2 * this->_init_iter; i++) {
             _z = F(_z);
         }
 
@@ -124,10 +125,10 @@ class FPI : public Image<uint64_t, 1>{
 
             // Perturb every 1000 iterations to break periodic cycles
             // that can trap the orbit and leave gaps in the image
-            if (static_cast<int>(i) % 1000 == 0) {
+            if (this->_add_noise && static_cast<int>(i) % 1000 == 0) {
                 _z.real(_z.real() * 0.99 - 1e-2 * sgn(_z.real()));
                 _z.imag(_z.imag() * 0.99 - 1e-2 * sgn(_z.imag()));
-                for (int j = 0; j < 1e1; j++)
+                for (int j = 0; j < this->_init_iter; j++)
                     _z = F(_z);
             }
 
@@ -136,13 +137,13 @@ class FPI : public Image<uint64_t, 1>{
             // re-iterate to restore two-dimensional wandering.
             if (std::abs(real(_z)) < 1e-15) {
                 _z.real(0.001);
-                for (int j = 0; j < 1e1; j++)
+                for (int j = 0; j < this->_init_iter; j++)
                     _z = F(_z);
             }
 
             if (std::abs(imag(_z)) < 1e-15) {
                 _z.imag(0.001);
-                for (int j = 0; j < 1e1; j++)
+                for (int j = 0; j < this->_init_iter; j++)
                     _z = F(_z);
             }
 
@@ -188,10 +189,14 @@ class FPI : public Image<uint64_t, 1>{
         return (S(0) < val) - (val < S(0));
     }
 
+ protected:
+    std::complex<Type> _z;        // Current orbit iterate
+    uint64_t _init_iter = 10;  // Transient iterations before accumulation
+    bool _add_noise = true;
+
  private:
     const Param _param;           // Configuration parameters for the map
 
-    std::complex<Type> _z;        // Current orbit iterate
     std::complex<Type> _znm1;     // Cached z^{n-1} used in F(z)
     std::complex<Type> _znew;     // Result of the latest map evaluation
     std::complex<Type> _lambda;   // Complex linear coefficient (real part)
