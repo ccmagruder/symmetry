@@ -87,7 +87,13 @@ class Complex{
         assert(this->_dptr == nullptr);
     }
 
-    Complex& operator=(const Complex<T>&) = delete;
+    // Copies data from another Complex array of the same size.
+    Complex<T>& operator=(const Complex<T>& other) {
+        assert(this->_N == other._N);
+        memcpy(this->_ptr, other._ptr, 2 * _N * sizeof(Scalar));
+        return *this;
+    }
+
     Complex& operator=(const Complex<T>&&) = delete;
 
     // Compares the array against an initializer list.
@@ -227,6 +233,23 @@ class Complex{
         return *this;
     }
 
+    // Sets all elements to the same complex value.
+    Complex<T>& fill(Scalar re, Scalar im) {
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < this->_N; i++) { *ptr++ = re; *ptr++ = im; }
+        return *this;
+    }
+
+    // Zeros all imaginary parts, keeping real parts unchanged.
+    Complex<T>& zero_imag() {
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
+        for (ptrdiff_t i = 0; i < this->_N; i++) { ptr++; *ptr++ = 0; }
+        return *this;
+    }
+
+    void* dptr() const { return _dptr; }
+    size_t size() const { return _N; }
+
     // Outputs the Complex array to a stream.
     friend std::ostream& operator<<(std::ostream& os, const Complex<T>& c) {
         os << "Complex<T>{";
@@ -272,3 +295,8 @@ template<> Complex<gpuDouble>& Complex<gpuDouble>::abs();
 template<> Complex<gpuDouble>& Complex<gpuDouble>::arg();
 template<> Complex<gpuDouble>& Complex<gpuDouble>::conj();
 template<> Complex<gpuDouble>& Complex<gpuDouble>::cos();
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::operator=(const Complex<gpuDouble>&);
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::fill(gpuDouble::Scalar, gpuDouble::Scalar);
+template<> Complex<gpuDouble>& Complex<gpuDouble>::zero_imag();

@@ -148,3 +148,43 @@ Complex<gpuDouble>& Complex<gpuDouble>::cos() {
     gpuDoubleCos<<<blocks, threads>>>(ptr, this->_N);
     return *this;
 }
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::operator=(const Complex<gpuDouble>& other) {
+    cudaMemcpy(this->_dptr, other._dptr,
+               2 * this->_N * sizeof(Scalar),
+               cudaMemcpyDeviceToDevice);
+    return *this;
+}
+
+__global__ void gpuDoubleFill(cuDoubleComplex* data, int n, double re, double im) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        data[i] = make_cuDoubleComplex(re, im);
+    }
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::fill(Scalar re, Scalar im) {
+    Type* ptr = reinterpret_cast<Type*>(this->_dptr);
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    gpuDoubleFill<<<blocks, threads>>>(ptr, this->_N, re, im);
+    return *this;
+}
+
+__global__ void gpuDoubleZeroImag(double* data, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        data[2*i+1] = 0.0;
+    }
+}
+
+template<>
+Complex<gpuDouble>& Complex<gpuDouble>::zero_imag() {
+    double* ptr = reinterpret_cast<double*>(this->_dptr);
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    gpuDoubleZeroImag<<<blocks, threads>>>(ptr, this->_N);
+    return *this;
+}

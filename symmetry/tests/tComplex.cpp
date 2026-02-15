@@ -121,3 +121,25 @@ TYPED_TEST(tComplex, Cos) {
     EXPECT_NEAR(z1[0], 0, 1e-4);
     EXPECT_EQ(z1[1], -2);
 }
+
+TYPED_TEST(tComplex, Assignment) {
+    using Scalar = typename TypeParam::Scalar;
+    Complex<TypeParam> x{1, 2, 3, 4};
+    Complex<TypeParam> y(2);
+    y = x;
+    EXPECT_EQ(y, std::initializer_list<Scalar>({1, 2, 3, 4}));
+}
+
+TYPED_TEST(tComplex, Fill) {
+    using Scalar = typename TypeParam::Scalar;
+    Complex<TypeParam> x(2);
+    x.fill(3.0, -1.0);
+    EXPECT_EQ(x, std::initializer_list<Scalar>({3, -1, 3, -1}));
+}
+
+TYPED_TEST(tComplex, ZeroImag) {
+    using Scalar = typename TypeParam::Scalar;
+    Complex<TypeParam> x{1, 2, 3, 4};
+    x.zero_imag();
+    EXPECT_EQ(x, std::initializer_list<Scalar>({1, 0, 3, 0}));
+}
