@@ -48,138 +48,164 @@ class FPI : public Image<uint64_t, 1>{
 
     ~FPI() {}
 
-    // Evaluates the chaotic map F(z).
+    // Evaluates the chaotic map F(z) on Complex<T> arrays.
     //
     // The map has the general form, where mu = complex(lambda, omega):
     //   F(z) = (mu + alpha*|z|^2 + beta*Re(z^n)
     //           + delta*cos(n*p*arg(z))*|z|) * z + gamma*conj(z)^{n-1}
-    // The symmetry group of the attractor is determined by the integer
-    // parameter n. Aborts if the orbit diverges to NaN; renormalizes if
-    // |z| exceeds 8 to keep the orbit bounded.
     //
-    // Args:
-    //   z: The current complex iterate.
-    //
-    // Returns:
-    //   The next iterate F(z).
-    Type F(Type z) {
-        // Guard against divergence
-        if (std::isnan(z.real())) exit(1);
+    // Operates on arrays of N complex numbers via Complex<T> operations,
+    // enabling both CPU (N=1) and GPU (N=65536) execution with the same code.
+    // Does not include renormalization — callers handle that separately.
+    void F(Complex<T>& z, Complex<T>& znm1, Complex<T>& bracket,
+           Complex<T>& alphaAbsSq, Complex<T>& betaReZn,
+           Complex<T>& deltaCosArg, Complex<T>& abs_copy,
+           Complex<T>& gammaConjZnm1,
+           const Type& s_alpha, const Type& s_beta,
+           const Type& s_delta, const Type& s_gamma,
+           const Type& s_np) {
+        int ni = static_cast<int>(std::round(this->_n));
 
-        // Compute z^{n-1} (znm1 equals 'z to the n minus 1')
-        this->_znm1 = z;
-        for (int i = 1; i < std::round(this->_n) - 1; i++) {
-            this->_znm1 *= z;
-        }
+        // z^{n-1}
+        znm1 = z;
+        for (int j = 1; j < ni - 1; j++) znm1 *= z;
 
+        // mu
+        bracket.fill(this->_lambda, this->_omega);
 
-        // Evaluate the equivariant map:
-        //   Term 1: mu * z                           — rotation/scaling
-        Type mu = Type(this->_lambda, this->_omega);
+        // alpha * |z|^2
+        abs_copy = z;
+        abs_copy.abs();
+        alphaAbsSq = abs_copy;
+        alphaAbsSq *= abs_copy;
+        alphaAbsSq *= s_alpha;
 
-        //   Term 2: alpha * |z|^2 * z                — radial nonlinearity
-        Scalar zabs = abs(z);
-        Type alphaZAbsSqr(zabs, 0);
-        alphaZAbsSqr *= alphaZAbsSqr;
-        alphaZAbsSqr *= this->_alpha;
-
-        //   Term 3: beta * Re(z^n) * z               — n-fold symmetric coupling
-        Type betaReZn(this->_znm1);
+        // beta * Re(z^n)
+        betaReZn = znm1;
         betaReZn *= z;
-        betaReZn.imag(0);
-        betaReZn *= this->_beta;
+        betaReZn.zero_imag();
+        betaReZn *= s_beta;
 
-        //   Term 4: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
-        Type deltaCosArgAbs(arg(z), 0);
-        deltaCosArgAbs *= this->_n * this->_p;
-        deltaCosArgAbs.real(std::cos(deltaCosArgAbs.real()));
-        deltaCosArgAbs *= zabs;
-        deltaCosArgAbs *= this->_delta;
+        // delta * cos(n*p*arg(z)) * |z|
+        deltaCosArg = z;
+        deltaCosArg.arg();
+        deltaCosArg *= s_np;
+        deltaCosArg.cos();
+        deltaCosArg *= abs_copy;
+        deltaCosArg *= s_delta;
 
-        //   Term 5: gamma * conj(z)^{n-1}            — conjugate coupling
-        Type deltaConjZnm1(std::conj(this->_znm1));
-        deltaConjZnm1 *= this->_gamma;
+        // bracket = mu + alpha|z|^2 + beta*Re(z^n) + delta*cos(...)*|z|
+        bracket += alphaAbsSq;
+        bracket += betaReZn;
+        bracket += deltaCosArg;
 
-        this->_znew = (
-                // this->alpha + i*this->omega
-                mu
-                // + this->_alpha * abs(z) * abs(z)
-                + alphaZAbsSqr
-                // + _param.beta * real(pow(z, _param.n))
-                + betaReZn
-                // + this->_beta * real(z*this->_znm1)
-                + deltaCosArgAbs
-                // + S(
-                //     this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
-                //     0
-                //   )
-            ) * z                                           // NOLINT
-            + deltaConjZnm1;
-            //+ _param.gamma * pow(conj(z), _param.n - 1);
-            // + this->_gamma * conj(this->_znm1);
+        // bracket * z
+        bracket *= z;
 
-        // Renormalize to prevent unbounded growth
-        if (abs(this->_znew) > 8) {
-            std::cerr << "Warning: abs(z)=" << abs(this->_znew)
-                << " renormalized to 1\n";
-            this->_znew /= abs(this->_znew) / 3.0;
-        }
+        // gamma * conj(z^{n-1})
+        gammaConjZnm1 = znm1;
+        gammaConjZnm1.conj();
+        gammaConjZnm1 *= s_gamma;
 
-        return this->_znew;
+        // z = bracket + gamma*conj(z)^{n-1}
+        z = bracket;
+        z += gammaConjZnm1;
     }
 
     // Runs the fixed-point iteration for niter steps.
     //
-    // Discards initial transient iterates so the orbit settles onto the
-    // attractor before accumulation. Each iterate z is then mapped to a pixel
-    // in the histogram image, incrementing the corresponding bin. Periodic
-    // perturbations break spurious cycles, and iterates that collapse onto
-    // the real or imaginary axis are nudged off to maintain coverage.
+    // Allocates Complex<T>(1) arrays and iterates F(z), accumulating orbit
+    // visits into a histogram image. Periodic perturbations break spurious
+    // cycles, and iterates on invariant axes are nudged off.
     //
     // Args:
     //   niter: Number of iterations to run.
     void run_fpi(uint64_t niter) {
+        const int N = 1;
+        Complex<T> z(N), znm1(N), bracket(N), alphaAbsSq(N),
+                   betaReZn(N), deltaCosArg(N), abs_copy(N),
+                   gammaConjZnm1(N);
+
+        Type s_alpha(this->_alpha, 0), s_beta(this->_beta, 0),
+             s_delta(this->_delta, 0), s_gamma(this->_gamma, 0),
+             s_np(this->_n * this->_p, 0);
+
+        // Seed from _z member
+        z.fill(this->_z.real(), this->_z.imag());
+
         // Discard initial transient iterates to reach the attractor
         for (int i = 0; i < 1e2 * this->_init_iter; i++) {
-            _z = F(_z);
+            F(z, znm1, bracket, alphaAbsSq, betaReZn,
+              deltaCosArg, abs_copy, gammaConjZnm1,
+              s_alpha, s_beta, s_delta, s_gamma, s_np);
+            // Renormalize
+            auto zval = z[0];
+            auto a = std::abs(zval);
+            if (a > 8.0) z.fill(zval.real() * 3.0/a, zval.imag() * 3.0/a);
         }
 
-        PBar i(niter, 8, this->_label);
-        for (i = 0; i < niter; i++) {
-            _z = F(_z);
+        PBar pbar(niter, 8, this->_label);
+        for (pbar = 0; pbar < niter; pbar++) {
+            F(z, znm1, bracket, alphaAbsSq, betaReZn,
+              deltaCosArg, abs_copy, gammaConjZnm1,
+              s_alpha, s_beta, s_delta, s_gamma, s_np);
+            auto zval = z[0];
+            auto a = std::abs(zval);
+            if (a > 8.0) {
+                z.fill(zval.real() * 3.0/a, zval.imag() * 3.0/a);
+                zval = z[0];
+            }
 
             // Perturb every 1000 iterations to break periodic cycles
-            // that can trap the orbit and leave gaps in the image
-            if (this->_add_noise && static_cast<int>(i) % 1000 == 0) {
-                _z.real(_z.real() * 0.99 - 1e-2 * sgn(_z.real()));
-                _z.imag(_z.imag() * 0.99 - 1e-2 * sgn(_z.imag()));
-                for (int j = 0; j < this->_init_iter; j++)
-                    _z = F(_z);
+            if (this->_add_noise && static_cast<int>(pbar) % 1000 == 0) {
+                z.fill(zval.real() * 0.99 - 1e-2 * sgn(zval.real()),
+                       zval.imag() * 0.99 - 1e-2 * sgn(zval.imag()));
+                for (int j = 0; j < this->_init_iter; j++) {
+                    F(z, znm1, bracket, alphaAbsSq, betaReZn,
+                      deltaCosArg, abs_copy, gammaConjZnm1,
+                      s_alpha, s_beta, s_delta, s_gamma, s_np);
+                    zval = z[0]; a = std::abs(zval);
+                    if (a > 8.0) z.fill(zval.real()*3.0/a, zval.imag()*3.0/a);
+                }
+                zval = z[0];
             }
 
-            // The real and imaginary axes can be invariant under the map.
-            // If the orbit collapses onto an axis, nudge it off and
-            // re-iterate to restore two-dimensional wandering.
-            if (std::abs(real(_z)) < 1e-15) {
-                _z.real(0.001);
-                for (int j = 0; j < this->_init_iter; j++)
-                    _z = F(_z);
+            // Nudge off invariant axes
+            if (std::abs(zval.real()) < 1e-15) {
+                z.fill(0.001, zval.imag());
+                for (int j = 0; j < this->_init_iter; j++) {
+                    F(z, znm1, bracket, alphaAbsSq, betaReZn,
+                      deltaCosArg, abs_copy, gammaConjZnm1,
+                      s_alpha, s_beta, s_delta, s_gamma, s_np);
+                    zval = z[0]; a = std::abs(zval);
+                    if (a > 8.0) z.fill(zval.real()*3.0/a, zval.imag()*3.0/a);
+                }
+                zval = z[0];
             }
-
-            if (std::abs(imag(_z)) < 1e-15) {
-                _z.imag(0.001);
-                for (int j = 0; j < this->_init_iter; j++)
-                    _z = F(_z);
+            if (std::abs(zval.imag()) < 1e-15) {
+                z.fill(zval.real(), 0.001);
+                for (int j = 0; j < this->_init_iter; j++) {
+                    F(z, znm1, bracket, alphaAbsSq, betaReZn,
+                      deltaCosArg, abs_copy, gammaConjZnm1,
+                      s_alpha, s_beta, s_delta, s_gamma, s_np);
+                    zval = z[0]; a = std::abs(zval);
+                    if (a > 8.0) z.fill(zval.real()*3.0/a, zval.imag()*3.0/a);
+                }
+                zval = z[0];
             }
 
             // Map the complex iterate to pixel coordinates and accumulate
             double size = std::sqrt(_rows*_cols);
-            int c = floor(_param.scale*size/2*real(_z) + _cols/2);
-            int r = floor(_param.scale*size/2*imag(_z) + _rows/2);
-            if (r >=0 && r < _rows && c >=0 && c < _cols) {
+            int c = floor(_param.scale*size/2*zval.real() + _cols/2);
+            int r = floor(_param.scale*size/2*zval.imag() + _rows/2);
+            if (r >= 0 && r < _rows && c >= 0 && c < _cols) {
                 ++(*this)[r][c];
             }
         }
+
+        // Copy back for test access
+        auto zfinal = z[0];
+        this->_z = Type(zfinal.real(), zfinal.imag());
     }
 
     // Convenience overload that runs for the default iteration count from Param.
@@ -222,8 +248,6 @@ class FPI : public Image<uint64_t, 1>{
  private:
     const Param _param;           // Configuration parameters for the map
 
-    Type _znm1;     // Cached z^{n-1} used in F(z)
-    Type _znew;     // Result of the latest map evaluation
     Scalar _lambda;               // Complex linear coefficient (real part)
     Scalar _omega;                // Complex linear coefficient (imag part)
     Scalar _alpha;                // Coefficient for |z|^2 term

@@ -6,7 +6,7 @@
 Param::Param(double lambda, double alpha, double beta, double gamma, double omega,
       double n, double delta, double p, double scale, uint64_t n_iter,
       uint64_t resx, uint64_t resy) : 
-        lambda(lambda), alpha(alpha), gamma(gamma), omega(omega), n(n),
+        lambda(lambda), alpha(alpha), beta(beta), gamma(gamma), omega(omega), n(n),
         delta(delta), p(p), scale(scale), n_iter(n_iter), resx(resx), resy(resy)
       {}
 

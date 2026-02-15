@@ -54,80 +54,11 @@ __global__ void fpi_heatmap_kernel(
     }
 }
 
-static void vectorized_F(
-    Complex<gpuDouble>& z, Complex<gpuDouble>& znm1,
-    Complex<gpuDouble>& bracket, Complex<gpuDouble>& alphaAbsSq,
-    Complex<gpuDouble>& betaReZn, Complex<gpuDouble>& deltaCosArg,
-    Complex<gpuDouble>& abs_copy, Complex<gpuDouble>& gammaConjZnm1,
-    Complex<gpuDouble>& conjz_base,
-    int ni, double lambda, double omega,
-    const cuDoubleComplex& s_alpha, const cuDoubleComplex& s_beta,
-    const cuDoubleComplex& s_delta, const cuDoubleComplex& s_gamma,
-    const cuDoubleComplex& s_np,
-    int N, int threads, int blocks) {
-
-    // z^{n-1}
-    znm1 = z;
-    for (int j = 1; j < ni - 1; j++) {
-        znm1 *= z;
-    }
-
-    // mu
-    bracket.fill(lambda, omega);
-
-    // alpha * |z|^2
-    abs_copy = z;
-    abs_copy.abs();
-    alphaAbsSq = abs_copy;
-    alphaAbsSq *= abs_copy;
-    alphaAbsSq *= s_alpha;
-
-    // beta * Re(z^n)
-    betaReZn = znm1;
-    betaReZn *= z;
-    betaReZn.zero_imag();
-    betaReZn *= s_beta;
-
-    // delta * cos(n*p*arg(z)) * |z|
-    deltaCosArg = z;
-    deltaCosArg.arg();
-    deltaCosArg *= s_np;
-    deltaCosArg.cos();
-    deltaCosArg *= abs_copy;
-    deltaCosArg *= s_delta;
-
-    // bracket = mu + alpha|z|^2 + beta*Re(z^n) + delta*cos(...)*|z|
-    bracket += alphaAbsSq;
-    bracket += betaReZn;
-    bracket += deltaCosArg;
-
-    // bracket * z
-    bracket *= z;
-
-    // gamma * conj(z)^{n-1}
-    gammaConjZnm1 = z;
-    gammaConjZnm1.conj();
-    conjz_base = gammaConjZnm1;
-    for (int j = 1; j < ni - 1; j++) {
-        gammaConjZnm1 *= conjz_base;
-    }
-    gammaConjZnm1 *= s_gamma;
-
-    // z = bracket + gamma*conj(z)^{n-1}
-    z = bracket;
-    z += gammaConjZnm1;
-
-    // Renormalize diverging orbits
-    fpi_renorm_kernel<<<blocks, threads>>>(
-        reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
-}
-
 template<>
 void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     const int N = 65536;
     int rows = static_cast<int>(this->_rows);
     int cols = static_cast<int>(this->_cols);
-    int ni = static_cast<int>(std::round(this->_n));
 
     size_t heatmap_bytes = rows * cols * sizeof(unsigned long long);
     unsigned long long* d_heatmap = nullptr;
@@ -142,7 +73,6 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     Complex<gpuDouble> deltaCosArg(N);
     Complex<gpuDouble> abs_copy(N);
     Complex<gpuDouble> gammaConjZnm1(N);
-    Complex<gpuDouble> conjz_base(N);
 
     int threads = 256;
     int blocks = (N + threads - 1) / threads;
@@ -160,36 +90,35 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     // Warmup transient
     int warmup = 100 * static_cast<int>(this->_init_iter);
     for (int i = 0; i < warmup; i++) {
-        vectorized_F(z, znm1, bracket, alphaAbsSq, betaReZn,
-                     deltaCosArg, abs_copy, gammaConjZnm1, conjz_base,
-                     ni, this->_lambda, this->_omega,
-                     s_alpha, s_beta, s_delta, s_gamma, s_np,
-                     N, threads, blocks);
+        this->F(z, znm1, bracket, alphaAbsSq, betaReZn,
+                deltaCosArg, abs_copy, gammaConjZnm1,
+                s_alpha, s_beta, s_delta, s_gamma, s_np);
+        fpi_renorm_kernel<<<blocks, threads>>>(
+            reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
     }
 
     // Main iteration loop
     // Each step advances all N orbits and accumulates N points.
-    // Total heatmap points = num_steps * points_per_step.
     uint64_t num_steps = (niter + N - 1) / N;
     uint64_t total_accumulated = 0;
 
     for (uint64_t step = 0; step < num_steps; step++) {
-        vectorized_F(z, znm1, bracket, alphaAbsSq, betaReZn,
-                     deltaCosArg, abs_copy, gammaConjZnm1, conjz_base,
-                     ni, this->_lambda, this->_omega,
-                     s_alpha, s_beta, s_delta, s_gamma, s_np,
-                     N, threads, blocks);
+        this->F(z, znm1, bracket, alphaAbsSq, betaReZn,
+                deltaCosArg, abs_copy, gammaConjZnm1,
+                s_alpha, s_beta, s_delta, s_gamma, s_np);
+        fpi_renorm_kernel<<<blocks, threads>>>(
+            reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
 
         // Noise perturbation every 1000 steps
         if (this->_add_noise && (step % 1000 == 0) && step > 0) {
             fpi_noise_kernel<<<blocks, threads>>>(
                 reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
             for (int j = 0; j < this->_init_iter; j++) {
-                vectorized_F(z, znm1, bracket, alphaAbsSq, betaReZn,
-                             deltaCosArg, abs_copy, gammaConjZnm1, conjz_base,
-                             ni, this->_lambda, this->_omega,
-                             s_alpha, s_beta, s_delta, s_gamma, s_np,
-                             N, threads, blocks);
+                this->F(z, znm1, bracket, alphaAbsSq, betaReZn,
+                        deltaCosArg, abs_copy, gammaConjZnm1,
+                        s_alpha, s_beta, s_delta, s_gamma, s_np);
+                fpi_renorm_kernel<<<blocks, threads>>>(
+                    reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
             }
         }
 
