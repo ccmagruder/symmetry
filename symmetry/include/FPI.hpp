@@ -71,26 +71,51 @@ class FPI : public Image<uint64_t, 1>{
             this->_znm1 *= z;
         }
 
-        std::complex<Type> mu = std::complex<Type>(this->_lambda, this->_omega);
 
         // Evaluate the equivariant map:
         //   Term 1: mu * z                           — rotation/scaling
+        std::complex<Type> mu = std::complex<Type>(this->_lambda, this->_omega);
+
         //   Term 2: alpha * |z|^2 * z                — radial nonlinearity
+        Type zabs = abs(z);
+        std::complex<Type> alphaZAbsSqr(zabs, 0);
+        alphaZAbsSqr *= alphaZAbsSqr;
+        alphaZAbsSqr *= this->_alpha;
+
         //   Term 3: beta * Re(z^n) * z               — n-fold symmetric coupling
+        std::complex<Type> betaReZn(this->_znm1);
+        betaReZn *= z;
+        betaReZn.imag(0);
+        betaReZn *= this->_beta;
+
         //   Term 4: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
+        std::complex<Type> deltaCosArgAbs(arg(z), 0);
+        deltaCosArgAbs *= this->_n * this->_p;
+        deltaCosArgAbs.real(std::cos(deltaCosArgAbs.real()));
+        deltaCosArgAbs *= zabs;
+        deltaCosArgAbs *= this->_delta;
+
         //   Term 5: gamma * conj(z)^{n-1}            — conjugate coupling
+        std::complex<Type> deltaConjZnm1(std::conj(this->_znm1));
+        deltaConjZnm1 *= this->_gamma;
+
         this->_znew = (
+                // this->alpha + i*this->omega
                 mu
-                + this->_alpha * abs(z) * abs(z)
-                //+ _param.beta * real(pow(z, _param.n))
-                + this->_beta * real(z*this->_znm1)
-                + std::complex<Type>(
-                    this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
-                    0
-                  )
+                // + this->_alpha * abs(z) * abs(z)
+                + alphaZAbsSqr
+                // + _param.beta * real(pow(z, _param.n))
+                + betaReZn
+                // + this->_beta * real(z*this->_znm1)
+                + deltaCosArgAbs
+                // + std::complex<Type>(
+                //     this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
+                //     0
+                //   )
             ) * z                                           // NOLINT
+            + deltaConjZnm1;
             //+ _param.gamma * pow(conj(z), _param.n - 1);
-            + this->_gamma * conj(this->_znm1);
+            // + this->_gamma * conj(this->_znm1);
 
         // Renormalize to prevent unbounded growth
         if (abs(this->_znew) > 8) {
