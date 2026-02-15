@@ -21,7 +21,11 @@ int main(int argc, char** argv) {
         std::string filenameConfig = std::string(argv[2]);
         std::string filenameImage = std::string(argv[3]);
         Param p(filenameConfig);
+#ifdef CMAKE_CUDA_COMPILER
+        FPI<gpuDouble> im(p, filenameConfig);
+#else
         FPI im(p, filenameConfig);
+#endif
         im.run_fpi();
         im.write(filenameImage);
     } else if (command == "color") {

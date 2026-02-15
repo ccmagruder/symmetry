@@ -18,7 +18,7 @@
 // Disables transient iteration and noise perturbation so each test can
 // evaluate a single application of F(z) from a known starting point
 // z = (1, 0.5).
-class TestFPI: public FPI<std::complex<double>, double> {
+class TestFPI: public FPI<double> {
  public:
     explicit TestFPI(Param p) : FPI(p) {
         this->_init_iter = 0;
@@ -121,12 +121,11 @@ TEST(tFPI, Ctor) {
     EXPECT_EQ(fpi[0][0] + fpi[0][1] + fpi[1][0] + fpi[1][1], 10);
     EXPECT_EQ(fpi.min(), 0);
 
-    // FPI<std::complex<double>, gpuDouble> fpi2(p);
-    // fpi2.run_fpi();
-    // EXPECT_EQ(fpi[0][0], fpi2[0][0]);
-    // EXPECT_EQ(fpi[0][1], fpi2[0][1]);
-    // EXPECT_EQ(fpi[1][0], fpi2[1][0]);
-    // EXPECT_EQ(fpi[1][1], fpi2[1][1]);
+#ifdef CMAKE_CUDA_COMPILER
+    FPI<gpuDouble> fpi2(p);
+    fpi2.run_fpi();
+    EXPECT_EQ(fpi2[0][0] + fpi2[0][1] + fpi2[1][0] + fpi2[1][1], 10);
+#endif
 }
 
 // Tests writing the histogram to a PGM image file.

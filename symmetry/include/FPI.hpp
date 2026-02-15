@@ -15,10 +15,11 @@
 // Iterates a complex-valued map z_{k+1} = F(z_k) and accumulates a histogram
 // of orbit visits into a 64-bit grayscale image. The template parameter T
 // controls the floating-point precision (defaults to double).
-template <typename S = std::complex<double>, typename T = double>
+template <typename T = double>
 class FPI : public Image<uint64_t, 1>{
  protected:
     using Type = typename complex_traits<T>::value_type;
+    using S = std::complex<Type>;
 
  public:
     // Constructs the FPI from a parameter set.
@@ -234,3 +235,8 @@ class FPI : public Image<uint64_t, 1>{
 
     const std::string _label;     // Label displayed on the progress bar
 };
+
+#ifdef CMAKE_CUDA_COMPILER
+template<>
+void FPI<gpuDouble>::run_fpi(uint64_t niter);
+#endif
