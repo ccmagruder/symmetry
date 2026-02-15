@@ -15,7 +15,7 @@
 // Iterates a complex-valued map z_{k+1} = F(z_k) and accumulates a histogram
 // of orbit visits into a 64-bit grayscale image. The template parameter T
 // controls the floating-point precision (defaults to double).
-template <typename T = double>
+template <typename S = std::complex<double>, typename T = double>
 class FPI : public Image<uint64_t, 1>{
  protected:
     using Type = typename complex_traits<T>::value_type;
@@ -61,7 +61,7 @@ class FPI : public Image<uint64_t, 1>{
     //
     // Returns:
     //   The next iterate F(z).
-    std::complex<Type> F(std::complex<Type> z) {
+    S F(S z) {
         // Guard against divergence
         if (std::isnan(z.real())) exit(1);
 
@@ -74,29 +74,29 @@ class FPI : public Image<uint64_t, 1>{
 
         // Evaluate the equivariant map:
         //   Term 1: mu * z                           — rotation/scaling
-        std::complex<Type> mu = std::complex<Type>(this->_lambda, this->_omega);
+        S mu = S(this->_lambda, this->_omega);
 
         //   Term 2: alpha * |z|^2 * z                — radial nonlinearity
         Type zabs = abs(z);
-        std::complex<Type> alphaZAbsSqr(zabs, 0);
+        S alphaZAbsSqr(zabs, 0);
         alphaZAbsSqr *= alphaZAbsSqr;
         alphaZAbsSqr *= this->_alpha;
 
         //   Term 3: beta * Re(z^n) * z               — n-fold symmetric coupling
-        std::complex<Type> betaReZn(this->_znm1);
+        S betaReZn(this->_znm1);
         betaReZn *= z;
         betaReZn.imag(0);
         betaReZn *= this->_beta;
 
         //   Term 4: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
-        std::complex<Type> deltaCosArgAbs(arg(z), 0);
+        S deltaCosArgAbs(arg(z), 0);
         deltaCosArgAbs *= this->_n * this->_p;
         deltaCosArgAbs.real(std::cos(deltaCosArgAbs.real()));
         deltaCosArgAbs *= zabs;
         deltaCosArgAbs *= this->_delta;
 
         //   Term 5: gamma * conj(z)^{n-1}            — conjugate coupling
-        std::complex<Type> deltaConjZnm1(std::conj(this->_znm1));
+        S deltaConjZnm1(std::conj(this->_znm1));
         deltaConjZnm1 *= this->_gamma;
 
         this->_znew = (
@@ -108,7 +108,7 @@ class FPI : public Image<uint64_t, 1>{
                 + betaReZn
                 // + this->_beta * real(z*this->_znm1)
                 + deltaCosArgAbs
-                // + std::complex<Type>(
+                // + S(
                 //     this->_delta * cos(arg(z) * this->_n * this->_p) * abs(z),
                 //     0
                 //   )
@@ -208,21 +208,21 @@ class FPI : public Image<uint64_t, 1>{
     }
 
     // Returns the sign of val: -1, 0, or +1.
-    template <typename S>
-    static int sgn(S val) {
-        return (S(0) < val) - (val < S(0));
+    template <typename U>
+    static int sgn(U val) {
+        return (U(0) < val) - (val < U(0));
     }
 
  protected:
-    std::complex<Type> _z;        // Current orbit iterate
+    S _z;        // Current orbit iterate
     uint64_t _init_iter = 10;     // Transient iterations before accumulation
     bool _add_noise = true;       // Whether to perturb the orbit to break cycles
 
  private:
     const Param _param;           // Configuration parameters for the map
 
-    std::complex<Type> _znm1;     // Cached z^{n-1} used in F(z)
-    std::complex<Type> _znew;     // Result of the latest map evaluation
+    S _znm1;     // Cached z^{n-1} used in F(z)
+    S _znew;     // Result of the latest map evaluation
     Type _lambda;                 // Complex linear coefficient (real part)
     Type _omega;                  // Complex linear coefficient (imag part)
     Type _alpha;                  // Coefficient for |z|^2 term
