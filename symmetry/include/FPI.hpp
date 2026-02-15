@@ -18,8 +18,8 @@
 template <typename T = cpuDouble>
 class FPI : public Image<uint64_t, 1>{
  protected:
-    using Type = typename complex_traits<T>::value_type;
-    using S = std::complex<Type>;
+    using Scalar = typename T::Scalar;
+    using Type = typename T::Type;
 
  public:
     // Constructs the FPI from a parameter set.
@@ -36,12 +36,12 @@ class FPI : public Image<uint64_t, 1>{
           _z(0, -0.12),
           _label(label) {
         // Cast double-precision parameters to the working type T
-        this->_alpha = static_cast<Type>(_param.alpha);
-        this->_beta = static_cast<Type>(_param.beta);
-        this->_delta = static_cast<Type>(_param.delta);
-        this->_gamma = static_cast<Type>(_param.gamma);
-        this->_n = static_cast<Type>(_param.n);
-        this->_p = static_cast<Type>(_param.p);
+        this->_alpha = static_cast<Scalar>(_param.alpha);
+        this->_beta = static_cast<Scalar>(_param.beta);
+        this->_delta = static_cast<Scalar>(_param.delta);
+        this->_gamma = static_cast<Scalar>(_param.gamma);
+        this->_n = static_cast<Scalar>(_param.n);
+        this->_p = static_cast<Scalar>(_param.p);
         this->_lambda = _param.lambda;
         this->_omega = _param.omega;
     }
@@ -62,7 +62,7 @@ class FPI : public Image<uint64_t, 1>{
     //
     // Returns:
     //   The next iterate F(z).
-    S F(S z) {
+    Type F(Type z) {
         // Guard against divergence
         if (std::isnan(z.real())) exit(1);
 
@@ -75,29 +75,29 @@ class FPI : public Image<uint64_t, 1>{
 
         // Evaluate the equivariant map:
         //   Term 1: mu * z                           — rotation/scaling
-        S mu = S(this->_lambda, this->_omega);
+        Type mu = Type(this->_lambda, this->_omega);
 
         //   Term 2: alpha * |z|^2 * z                — radial nonlinearity
-        Type zabs = abs(z);
-        S alphaZAbsSqr(zabs, 0);
+        Scalar zabs = abs(z);
+        Type alphaZAbsSqr(zabs, 0);
         alphaZAbsSqr *= alphaZAbsSqr;
         alphaZAbsSqr *= this->_alpha;
 
         //   Term 3: beta * Re(z^n) * z               — n-fold symmetric coupling
-        S betaReZn(this->_znm1);
+        Type betaReZn(this->_znm1);
         betaReZn *= z;
         betaReZn.imag(0);
         betaReZn *= this->_beta;
 
         //   Term 4: delta * cos(n*p*arg(z))*|z| * z  — angular modulation
-        S deltaCosArgAbs(arg(z), 0);
+        Type deltaCosArgAbs(arg(z), 0);
         deltaCosArgAbs *= this->_n * this->_p;
         deltaCosArgAbs.real(std::cos(deltaCosArgAbs.real()));
         deltaCosArgAbs *= zabs;
         deltaCosArgAbs *= this->_delta;
 
         //   Term 5: gamma * conj(z)^{n-1}            — conjugate coupling
-        S deltaConjZnm1(std::conj(this->_znm1));
+        Type deltaConjZnm1(std::conj(this->_znm1));
         deltaConjZnm1 *= this->_gamma;
 
         this->_znew = (
@@ -215,23 +215,23 @@ class FPI : public Image<uint64_t, 1>{
     }
 
  protected:
-    S _z;        // Current orbit iterate
+    Type _z;        // Current orbit iterate
     uint64_t _init_iter = 10;     // Transient iterations before accumulation
     bool _add_noise = true;       // Whether to perturb the orbit to break cycles
 
  private:
     const Param _param;           // Configuration parameters for the map
 
-    S _znm1;     // Cached z^{n-1} used in F(z)
-    S _znew;     // Result of the latest map evaluation
-    Type _lambda;                 // Complex linear coefficient (real part)
-    Type _omega;                  // Complex linear coefficient (imag part)
-    Type _alpha;                  // Coefficient for |z|^2 term
-    Type _beta;                   // Coefficient for Re(z^n) term
-    Type _delta;                  // Coefficient for angular modulation term
-    Type _gamma;                  // Coefficient for conjugate coupling term
-    Type _n;                      // Symmetry order (n-fold rotational symmetry)
-    Type _p;                      // Angular frequency multiplier for delta term
+    Type _znm1;     // Cached z^{n-1} used in F(z)
+    Type _znew;     // Result of the latest map evaluation
+    Scalar _lambda;               // Complex linear coefficient (real part)
+    Scalar _omega;                // Complex linear coefficient (imag part)
+    Scalar _alpha;                // Coefficient for |z|^2 term
+    Scalar _beta;                 // Coefficient for Re(z^n) term
+    Scalar _delta;                // Coefficient for angular modulation term
+    Scalar _gamma;                // Coefficient for conjugate coupling term
+    Scalar _n;                    // Symmetry order (n-fold rotational symmetry)
+    Scalar _p;                    // Angular frequency multiplier for delta term
 
     const std::string _label;     // Label displayed on the progress bar
 };

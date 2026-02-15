@@ -78,11 +78,11 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
         CUBLAS_SIDE_LEFT,                                          // mode
         this->_N,                                                  // m
         1,                                                         // n
-        reinterpret_cast<cuDoubleComplex*>(other._dptr),           // A
+        reinterpret_cast<Type*>(other._dptr),                // A
         this->_N,                                                  // lda
-        reinterpret_cast<cuDoubleComplex*>(this->_dptr),           // x
+        reinterpret_cast<Type*>(this->_dptr),               // x
         1,                                                         // incx
-        reinterpret_cast<cuDoubleComplex*>(this->_dptr),           // C
+        reinterpret_cast<Type*>(this->_dptr),               // C
         this->_N);                                                 // ldc
     return *this;
 }
@@ -98,12 +98,12 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>& oth
 // Returns:
 //   Reference to this array after scaling.
 template<>
-Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>& a) {
+Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Type& a) {
     cublasZscal(
         *reinterpret_cast<CublasHandleSingleton*>(this->_handle),     // handle
         this->_N,                                                     // n
-        reinterpret_cast<const cuDoubleComplex*>(&a),                 // alpha
-        reinterpret_cast<cuDoubleComplex*>(this->_dptr),              // x
+        reinterpret_cast<const Type*>(&a),                     // alpha
+        reinterpret_cast<Type*>(this->_dptr),                  // x
         1);                                                           // incx
     return *this;
 }

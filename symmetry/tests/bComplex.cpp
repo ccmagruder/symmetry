@@ -34,7 +34,7 @@ void bComplexAddition(benchmark::State& state) {  // NOLINT
 
 // CPU benchmark: Complex<double> addition.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexAddition, double)
+BENCHMARK_TEMPLATE(bComplexAddition, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 
@@ -67,7 +67,7 @@ void bComplexMultiplication(benchmark::State& state) {  // NOLINT
 
 // CPU benchmark: Complex<double> multiplication.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexMultiplication, double)
+BENCHMARK_TEMPLATE(bComplexMultiplication, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 
@@ -94,14 +94,14 @@ BENCHMARK_TEMPLATE(bComplexMultiplication, gpuDouble)
 template <typename T>
 void bComplexScalarMultiplication(benchmark::State& state) {  // NOLINT
     Complex<T> x(state.range(0));
-    std::complex<double> a(state.range(0));
+    typename T::Type a = {static_cast<double>(state.range(0)), 0};
     for (auto _ : state)
         x *= a;
 }
 
 // CPU benchmark: Complex<double> multiplication.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexScalarMultiplication, double)
+BENCHMARK_TEMPLATE(bComplexScalarMultiplication, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 
@@ -128,14 +128,13 @@ BENCHMARK_TEMPLATE(bComplexScalarMultiplication, gpuDouble)
 template <typename T>
 void bComplexAbs(benchmark::State& state) {  // NOLINT
     Complex<T> x(state.range(0));
-    std::complex<double> a(state.range(0));
     for (auto _ : state)
         x.abs();
 }
 
 // CPU benchmark: Complex<double> multiplication.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexAbs, double)
+BENCHMARK_TEMPLATE(bComplexAbs, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 
@@ -162,14 +161,13 @@ BENCHMARK_TEMPLATE(bComplexAbs, gpuDouble)
 template <typename T>
 void bComplexArg(benchmark::State& state) {  // NOLINT
     Complex<T> x(state.range(0));
-    std::complex<double> a(state.range(0));
     for (auto _ : state)
         x.arg();
 }
 
 // CPU benchmark: Complex<double> multiplication.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexArg, double)
+BENCHMARK_TEMPLATE(bComplexArg, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 
@@ -196,14 +194,13 @@ BENCHMARK_TEMPLATE(bComplexArg, gpuDouble)
 template <typename T>
 void bComplexConj(benchmark::State& state) {  // NOLINT
     Complex<T> x(state.range(0));
-    std::complex<double> a(state.range(0));
     for (auto _ : state)
         x.conj();
 }
 
 // CPU benchmark: Complex<double> multiplication.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexConj, double)
+BENCHMARK_TEMPLATE(bComplexConj, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 
@@ -230,14 +227,13 @@ BENCHMARK_TEMPLATE(bComplexConj, gpuDouble)
 template <typename T>
 void bComplexCos(benchmark::State& state) {  // NOLINT
     Complex<T> x(state.range(0));
-    std::complex<double> a(state.range(0));
     for (auto _ : state)
         x.cos();
 }
 
 // CPU benchmark: Complex<double> multiplication.
 // Tests array sizes from 4K to 16K elements, multiplied by 4 each step.
-BENCHMARK_TEMPLATE(bComplexCos, double)
+BENCHMARK_TEMPLATE(bComplexCos, cpuDouble)
     ->RangeMultiplier(rangeMult)->Range(rangeMin, rangeMax)
     ->Unit(benchmark::kMicrosecond);
 

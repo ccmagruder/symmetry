@@ -22,11 +22,11 @@ class TestFPI: public FPI<cpuDouble> {
  public:
     explicit TestFPI(Param p) : FPI(p) {
         this->_init_iter = 0;
-        this->_z = std::complex<double>(1, 0.5);
+        this->_z = Type(1, 0.5);
         this->_add_noise = false;
     }
     TestFPI() = delete;
-    const std::complex<double>& z() { return this->_z; }
+    const Type& z() { return this->_z; }
 };
 
 // Tests the lambda term: F(z) = lambda * z.

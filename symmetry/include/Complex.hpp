@@ -27,30 +27,19 @@ class CublasHandleSingleton {
     static int _count;
 };
 
-// Tag type for GPU-accelerated double precision operations.
+// Tag types for CPU and GPU double precision operations.
 //
-// Used as a template parameter to select GPU-accelerated specializations
-// of Complex operations.
-class cpuDouble {};
-class gpuDouble {};
-
-// Traits class to extract the underlying value type from a Complex type.
-//
-// For integral types, the value_type is the type itself.
-// For gpuDouble, the value_type is double.
-template <typename T>
-struct complex_traits {
-    typedef T value_type;
+// Used as template parameters to select CPU or GPU-accelerated specializations
+// of Complex and FPI operations.
+class cpuDouble {
+ public:
+    using Scalar = double;
+    using Type = std::complex<double>;
 };
-
-template<>
-struct complex_traits<cpuDouble> {
-    typedef double value_type;
-};
-
-template<>
-struct complex_traits<gpuDouble> {
-    typedef double value_type;
+class gpuDouble {
+ public:
+    using Scalar = double;
+    using Type = cuDoubleComplex;
 };
 
 // A container for an array of complex numbers.
@@ -63,8 +52,8 @@ struct complex_traits<gpuDouble> {
 //      (int, float, double) for CPU operations.
 template<typename T>
 class Complex{
-    using Type = typename complex_traits<T>::value_type;
-    using ComplexType = std::complex<Type>;
+    using Scalar = typename T::Scalar;
+    using Type = typename T::Type;
 
  public:
     // Constructs a Complex array with N complex numbers.
@@ -72,7 +61,7 @@ class Complex{
     // Args:
     //   N: The number of complex numbers to store.
     explicit Complex(size_t N) : _N(N), _dptr(nullptr) {
-        this->_ptr = ::operator new(2*N*sizeof(Type));
+        this->_ptr = ::operator new(2*N*sizeof(Scalar));
         this->_dmalloc();
     }
 
@@ -83,9 +72,9 @@ class Complex{
     //
     // Args:
     //   l: Initializer list of real values as {re1, im1, re2, im2, ...}.
-    Complex(std::initializer_list<Type> l) : Complex(l.size()/2) {
-        using Iter = typename std::initializer_list<Type>::const_iterator;
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+    Complex(std::initializer_list<Scalar> l) : Complex(l.size()/2) {
+        using Iter = typename std::initializer_list<Scalar>::const_iterator;
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
         for (Iter i = l.begin(); i < l.end(); i++) {
             *ptr++ = *i;
         }
@@ -108,10 +97,10 @@ class Complex{
     //
     // Returns:
     //   True if all values match exactly, false otherwise.
-    bool operator==(std::initializer_list<Type> l) const {
-        using Iter = typename std::initializer_list<Type>::const_iterator;
+    bool operator==(std::initializer_list<Scalar> l) const {
+        using Iter = typename std::initializer_list<Scalar>::const_iterator;
         this->_memcpyDeviceToHost();
-        const Type* ptr = reinterpret_cast<const Type*>(this->_ptr);
+        const Scalar* ptr = reinterpret_cast<const Scalar*>(this->_ptr);
         for (Iter i = l.begin(); i < l.end(); i++) {
             if (*ptr != *i) {
                 return false;
@@ -128,9 +117,9 @@ class Complex{
     //
     // Returns:
     //   Reference to the i-th complex number.
-    const ComplexType& operator[](ptrdiff_t i) const {
+    const Type& operator[](ptrdiff_t i) const {
         this->_memcpyDeviceToHost();
-        return *(reinterpret_cast<const ComplexType*>(this->_ptr) + i);
+        return *(reinterpret_cast<const Type*>(this->_ptr) + i);
     }
 
     // Element-wise addition. Adds other to this array in place.
@@ -141,8 +130,8 @@ class Complex{
     // Returns:
     //   Reference to this array after addition.
     Complex<T>& operator+=(const Complex<T>& other) {
-        Type* other_ptr = reinterpret_cast<Type*>(other._ptr);
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        Scalar* other_ptr = reinterpret_cast<Scalar*>(other._ptr);
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
         for (ptrdiff_t i = 0; i < 2 * this->_N; i++) {
             *ptr++ += *other_ptr++;
         }
@@ -157,9 +146,9 @@ class Complex{
     // Returns:
     //   Reference to this array after multiplication.
     Complex<T>& operator*=(const Complex<T>& other) {
-        const ComplexType* other_ptr
-            = reinterpret_cast<const ComplexType*>(other._ptr);
-        ComplexType* ptr = reinterpret_cast<ComplexType*>(this->_ptr);
+        const Type* other_ptr
+            = reinterpret_cast<const Type*>(other._ptr);
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ *= *other_ptr++;
         }
@@ -173,8 +162,8 @@ class Complex{
     //
     // Returns:
     //   Reference to this array after scaling.
-    Complex<T>& operator*=(const ComplexType& a) {
-        ComplexType* ptr = reinterpret_cast<ComplexType*>(this->_ptr);
+    Complex<T>& operator*=(const Type& a) {
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ *= a;
         }
@@ -188,8 +177,8 @@ class Complex{
     // Returns:
     //   Reference to this array after the operation.
     Complex<T>& abs() {
-        ComplexType* cptr = reinterpret_cast<ComplexType*>(this->_ptr);
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        Type* cptr = reinterpret_cast<Type*>(this->_ptr);
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ = std::abs(*cptr++);
             *ptr++ = 0;
@@ -204,8 +193,8 @@ class Complex{
     // Returns:
     //   Reference to this array after the operation.
     Complex<T>& arg() {
-        ComplexType* cptr = reinterpret_cast<ComplexType*>(this->_ptr);
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        Type* cptr = reinterpret_cast<Type*>(this->_ptr);
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ = std::arg(*cptr++);
             *ptr++ = 0;
@@ -218,7 +207,7 @@ class Complex{
     // Returns:
     //   Reference to this array after the operation.
     Complex<T>& conj() {
-        ComplexType* ptr = reinterpret_cast<ComplexType*>(this->_ptr);
+        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ = std::conj(*ptr);
         }
@@ -230,7 +219,7 @@ class Complex{
     // Returns:
     //   Reference to this array after the operation.
     Complex<T>& cos() {
-        Type* ptr = reinterpret_cast<Type*>(this->_ptr);
+        Scalar* ptr = reinterpret_cast<Scalar*>(this->_ptr);
         for (ptrdiff_t i = 0; i < this->_N; i++) {
             *ptr++ = std::cos(*ptr);
             ptr++;
@@ -241,7 +230,7 @@ class Complex{
     // Outputs the Complex array to a stream.
     friend std::ostream& operator<<(std::ostream& os, const Complex<T>& c) {
         os << "Complex<T>{";
-        Type* ptr = reinterpret_cast<Type*>(c._ptr);
+        Scalar* ptr = reinterpret_cast<Scalar*>(c._ptr);
         for (ptrdiff_t i = 0; i < 2 * c._N; i++) {
             os << *ptr++ << ",";
         }
@@ -278,7 +267,7 @@ Complex<gpuDouble>& Complex<gpuDouble>::operator+=(const Complex<gpuDouble>&);
 template<>
 Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const Complex<gpuDouble>&);
 template<>
-Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const std::complex<double>&);
+Complex<gpuDouble>& Complex<gpuDouble>::operator*=(const gpuDouble::Type&);
 template<> Complex<gpuDouble>& Complex<gpuDouble>::abs();
 template<> Complex<gpuDouble>& Complex<gpuDouble>::arg();
 template<> Complex<gpuDouble>& Complex<gpuDouble>::conj();
