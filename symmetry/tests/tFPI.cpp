@@ -18,7 +18,7 @@
 // Disables transient iteration and noise perturbation so each test can
 // evaluate a single application of F(z) from a known starting point
 // z = (1, 0.5).
-class TestFPI: public FPI<double> {
+class TestFPI: public FPI<cpuDouble> {
  public:
     explicit TestFPI(Param p) : FPI(p) {
         this->_init_iter = 0;

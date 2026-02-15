@@ -15,7 +15,7 @@
 // Iterates a complex-valued map z_{k+1} = F(z_k) and accumulates a histogram
 // of orbit visits into a 64-bit grayscale image. The template parameter T
 // controls the floating-point precision (defaults to double).
-template <typename T = double>
+template <typename T = cpuDouble>
 class FPI : public Image<uint64_t, 1>{
  protected:
     using Type = typename complex_traits<T>::value_type;

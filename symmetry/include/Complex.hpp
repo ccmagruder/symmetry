@@ -31,6 +31,7 @@ class CublasHandleSingleton {
 //
 // Used as a template parameter to select GPU-accelerated specializations
 // of Complex operations.
+class cpuDouble {};
 class gpuDouble {};
 
 // Traits class to extract the underlying value type from a Complex type.
@@ -40,6 +41,11 @@ class gpuDouble {};
 template <typename T>
 struct complex_traits {
     typedef T value_type;
+};
+
+template<>
+struct complex_traits<cpuDouble> {
+    typedef double value_type;
 };
 
 template<>
