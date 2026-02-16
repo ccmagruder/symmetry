@@ -116,13 +116,17 @@ class Complex{
         return true;
     }
 
-    // Accesses the i-th complex number.
+    // Accesses the i-th complex number (mutable).
     //
-    // Args:
-    //   i: Index of the complex number.
-    //
-    // Returns:
-    //   Reference to the i-th complex number.
+    // Used by CPU per-element helpers (renorm, noise, nudge, accumulate).
+    // GPU run_fpi operates on device memory via dptr() and CUDA kernels
+    // instead.
+    Type& operator[](ptrdiff_t i) {
+        this->_memcpyDeviceToHost();
+        return *(reinterpret_cast<Type*>(this->_ptr) + i);
+    }
+
+    // Accesses the i-th complex number (const).
     const Type& operator[](ptrdiff_t i) const {
         this->_memcpyDeviceToHost();
         return *(reinterpret_cast<const Type*>(this->_ptr) + i);

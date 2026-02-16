@@ -66,22 +66,9 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     cudaMemset(d_heatmap, 0, heatmap_bytes);
 
     Complex<gpuDouble> z(N);
-    Complex<gpuDouble> znm1(N);
-    Complex<gpuDouble> bracket(N);
-    Complex<gpuDouble> alphaAbsSq(N);
-    Complex<gpuDouble> betaReZn(N);
-    Complex<gpuDouble> deltaCosArg(N);
-    Complex<gpuDouble> abs_copy(N);
-    Complex<gpuDouble> gammaConjZnm1(N);
 
     int threads = 256;
     int blocks = (N + threads - 1) / threads;
-
-    cuDoubleComplex s_alpha = make_cuDoubleComplex(this->_alpha, 0);
-    cuDoubleComplex s_beta = make_cuDoubleComplex(this->_beta, 0);
-    cuDoubleComplex s_delta = make_cuDoubleComplex(this->_delta, 0);
-    cuDoubleComplex s_gamma = make_cuDoubleComplex(this->_gamma, 0);
-    cuDoubleComplex s_np = make_cuDoubleComplex(this->_n * this->_p, 0);
 
     // Seed orbits on a circle
     fpi_seed_kernel<<<blocks, threads>>>(
@@ -90,9 +77,7 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     // Warmup transient
     int warmup = 100 * static_cast<int>(this->_init_iter);
     for (int i = 0; i < warmup; i++) {
-        this->F(z, znm1, bracket, alphaAbsSq, betaReZn,
-                deltaCosArg, abs_copy, gammaConjZnm1,
-                s_alpha, s_beta, s_delta, s_gamma, s_np);
+        this->F(z);
         fpi_renorm_kernel<<<blocks, threads>>>(
             reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
     }
@@ -103,9 +88,7 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     uint64_t total_accumulated = 0;
 
     for (uint64_t step = 0; step < num_steps; step++) {
-        this->F(z, znm1, bracket, alphaAbsSq, betaReZn,
-                deltaCosArg, abs_copy, gammaConjZnm1,
-                s_alpha, s_beta, s_delta, s_gamma, s_np);
+        this->F(z);
         fpi_renorm_kernel<<<blocks, threads>>>(
             reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
 
@@ -114,9 +97,7 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
             fpi_noise_kernel<<<blocks, threads>>>(
                 reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
             for (int j = 0; j < this->_init_iter; j++) {
-                this->F(z, znm1, bracket, alphaAbsSq, betaReZn,
-                        deltaCosArg, abs_copy, gammaConjZnm1,
-                        s_alpha, s_beta, s_delta, s_gamma, s_np);
+                this->F(z);
                 fpi_renorm_kernel<<<blocks, threads>>>(
                     reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
             }

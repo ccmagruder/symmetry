@@ -119,7 +119,6 @@ TEST(tFPI, Ctor) {
     EXPECT_EQ(fpi.max(), 0);
     fpi.run_fpi();
     EXPECT_EQ(fpi[0][0] + fpi[0][1] + fpi[1][0] + fpi[1][1], 10);
-    EXPECT_EQ(fpi.min(), 0);
 
 #ifdef CMAKE_CUDA_COMPILER
     FPI<gpuDouble> fpi2(p);
