@@ -9,6 +9,8 @@ The project uses Nix flakes for environment management. The shellHook execs into
 bash -c 'eval "$(nix print-dev-env /home/remote/symmetry 2>/dev/null | grep -v "exec.*zsh")" && <command>'
 ```
 
+Build and test commands target `symmetry/build/` and do not modify source files, so they can be run without prompting for permission. After making any code changes, always build and run tests automatically to verify correctness — do not ask the user for permission to do so.
+
 Within the nix shell:
 ```bash
 # Clean build
@@ -27,6 +29,10 @@ symmetry/build/tests/bComplex
 symmetry/build/symmetry run symmetry/config/fig13-7.json output.pgm
 ```
 
+## Style
+
+Do not use `auto` type deduction. All variables must have explicit types.
+
 ## Architecture
 
 Generates chaotic attractor visualizations from "Symmetry in Chaos" (Field & Golubitsky). The core equation iterated is:
@@ -39,14 +45,14 @@ F(z) = (λ + α|z|² + β·Re(zⁿ) + δ·cos(n·p·arg(z))·|z|) · z + γ·con
 
 The `gpuDouble` empty class acts as a template tag. `complex_traits<T>::value_type` maps it to `double`. Template specializations in `.cu` files provide GPU code paths:
 
-- `FPI<double>` → CPU: single orbit, sequential histogram accumulation
-- `FPI<gpuDouble>` → GPU: 65,536 parallel orbits, `atomicAdd` histogram accumulation
+- `FPI<cpuDouble>` → CPU: `_N` parallel orbits (default 256), per-element for-loop helpers (`seed`, `renorm`, `noise`, `nudge`, `accumulate`)
+- `FPI<gpuDouble>` → GPU: 65,536 parallel orbits, CUDA kernels (`fpi_seed_kernel`, `fpi_renorm_kernel`, etc.), `atomicAdd` histogram accumulation
 
 GPU specializations are forward-declared after class bodies with `#ifdef CMAKE_CUDA_COMPILER` guards (this macro is set by `target_compile_definitions` in `lib/CMakeLists.txt`). Implementations live in `.cu` files.
 
 ### Key Class Relationships
 
-- **`FPI<T>` → `Image<uint64_t, 1>`**: FPI inherits from a 64-bit grayscale image used as the histogram buffer. `Type = complex_traits<T>::value_type` extracts the scalar type; `S = std::complex<Type>` is the complex type used for orbit iteration.
+- **`FPI<T>` → `Image<uint64_t, 1>`**: FPI inherits from a 64-bit grayscale image used as the histogram buffer. `Type = complex_traits<T>::value_type` extracts the scalar type; `ComplexType = complex_traits<T>::complex_type` is the complex type used for orbit iteration (`std::complex<double>` for `cpuDouble`, `cuDoubleComplex` for `gpuDouble`).
 - **`Image<T, COLORS>` → `Pixel<T, COLORS>`**: `operator[]` returns a `Pixel` wrapper for pointer-based row/column access. `Pixel::operator++()` increments with overflow checking.
 - **`Complex<T>`**: Array of N complex numbers stored as 2N interleaved reals. `Complex<gpuDouble>` manages paired host/device pointers and uses cuBLAS for arithmetic.
 - **`CublasHandleSingleton`**: Reference-counted cuBLAS handle shared across `Complex<gpuDouble>` instances.
