@@ -33,6 +33,27 @@ symmetry/build/symmetry run symmetry/config/fig13-7.json output.pgm
 
 Do not use `auto` type deduction. All variables must have explicit types.
 
+Use `this->` to access member variables and methods, even when not required by the language.
+
+Use fixed-width integer types (`uint64_t`) instead of platform-dependent types (`unsigned long long`).
+
+Use `//` line comments for all docstrings (no `/** */` or `///`). Format:
+```cpp
+// One-line summary.
+//
+// Optional detail paragraph(s).
+//
+// Args:
+//   param: Description.
+//
+// Returns:
+//   Description.
+void foo(int param);
+
+// Short one-liner for trivial methods.
+int bar();
+```
+
 ## Architecture
 
 Generates chaotic attractor visualizations from "Symmetry in Chaos" (Field & Golubitsky). The core equation iterated is:
