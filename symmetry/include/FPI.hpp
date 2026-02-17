@@ -43,14 +43,14 @@ class FPI : public Image<uint64_t, 1>{
           _znm1(_N), _bracket(_N), _alphaAbsSq(_N), _betaReZn(_N),
           _deltaCosArg(_N), _abs_copy(_N), _gammaConjZnm1(_N) {
         // Cast double-precision parameters to the working type T
-        this->_alpha = static_cast<Scalar>(_param.alpha);
-        this->_beta = static_cast<Scalar>(_param.beta);
-        this->_delta = static_cast<Scalar>(_param.delta);
-        this->_gamma = static_cast<Scalar>(_param.gamma);
-        this->_n = static_cast<Scalar>(_param.n);
-        this->_p = static_cast<Scalar>(_param.p);
-        this->_lambda = _param.lambda;
-        this->_omega = _param.omega;
+        this->_alpha = static_cast<Scalar>(this->_param.alpha);
+        this->_beta = static_cast<Scalar>(this->_param.beta);
+        this->_delta = static_cast<Scalar>(this->_param.delta);
+        this->_gamma = static_cast<Scalar>(this->_param.gamma);
+        this->_n = static_cast<Scalar>(this->_param.n);
+        this->_p = static_cast<Scalar>(this->_param.p);
+        this->_lambda = this->_param.lambda;
+        this->_omega = this->_param.omega;
     }
 
     ~FPI() {}
@@ -71,71 +71,76 @@ class FPI : public Image<uint64_t, 1>{
              s_np{this->_n * this->_p, 0};
 
         // z^{n-1}
-        _znm1 = z;
-        for (int j = 1; j < ni - 1; j++) _znm1 *= z;
+        this->_znm1 = z;
+        for (int j = 1; j < ni - 1; j++) this->_znm1 *= z;
 
         // mu
-        _bracket.fill(this->_lambda, this->_omega);
+        this->_bracket.fill(this->_lambda, this->_omega);
 
         // alpha * |z|^2
-        _abs_copy = z;
-        _abs_copy.abs();
-        _alphaAbsSq = _abs_copy;
-        _alphaAbsSq *= _abs_copy;
-        _alphaAbsSq *= s_alpha;
+        this->_abs_copy = z;
+        this->_abs_copy.abs();
+        this->_alphaAbsSq = this->_abs_copy;
+        this->_alphaAbsSq *= this->_abs_copy;
+        this->_alphaAbsSq *= s_alpha;
 
         // beta * Re(z^n)
-        _betaReZn = _znm1;
-        _betaReZn *= z;
-        _betaReZn.zero_imag();
-        _betaReZn *= s_beta;
+        this->_betaReZn = this->_znm1;
+        this->_betaReZn *= z;
+        this->_betaReZn.zero_imag();
+        this->_betaReZn *= s_beta;
 
         // delta * cos(n*p*arg(z)) * |z|
-        _deltaCosArg = z;
-        _deltaCosArg.arg();
-        _deltaCosArg *= s_np;
-        _deltaCosArg.cos();
-        _deltaCosArg *= _abs_copy;
-        _deltaCosArg *= s_delta;
+        this->_deltaCosArg = z;
+        this->_deltaCosArg.arg();
+        this->_deltaCosArg *= s_np;
+        this->_deltaCosArg.cos();
+        this->_deltaCosArg *= this->_abs_copy;
+        this->_deltaCosArg *= s_delta;
 
         // bracket = mu + alpha|z|^2 + beta*Re(z^n) + delta*cos(...)*|z|
-        _bracket += _alphaAbsSq;
-        _bracket += _betaReZn;
-        _bracket += _deltaCosArg;
+        this->_bracket += this->_alphaAbsSq;
+        this->_bracket += this->_betaReZn;
+        this->_bracket += this->_deltaCosArg;
 
         // bracket * z
-        _bracket *= z;
+        this->_bracket *= z;
 
         // gamma * conj(z^{n-1})
-        _gammaConjZnm1 = _znm1;
-        _gammaConjZnm1.conj();
-        _gammaConjZnm1 *= s_gamma;
+        this->_gammaConjZnm1 = this->_znm1;
+        this->_gammaConjZnm1.conj();
+        this->_gammaConjZnm1 *= s_gamma;
 
         // z = bracket + gamma*conj(z)^{n-1}
-        z = _bracket;
-        z += _gammaConjZnm1;
+        z = this->_bracket;
+        z += this->_gammaConjZnm1;
     }
 
     // Runs the fixed-point iteration, accumulating niter points into the
     // histogram.
     //
-    // Advances _N orbits in parallel per step via F(), mirroring the GPU
-    // specialization's structure.  Per-element operations (renorm, noise,
-    // nudge, accumulate) use for-loops where the GPU uses CUDA kernels.
+    // Advances _N orbits in parallel per step via F().  Per-element
+    // operations (seed, renorm, noise, nudge, accumulate) dispatch to
+    // CPU for-loops by default; gpuDouble template specializations in
+    // FPI.cu override them with CUDA kernel launches.  The pre_run/post_run
+    // hooks handle GPU heatmap allocation and copy-back.
     // Total steps = ceil(niter / _N); the last step may accumulate fewer
     // than _N points.
     //
     // Args:
     //   niter: Total number of points to accumulate.
     void run_fpi(uint64_t niter) {
+        this->pre_run();
+
         Complex<T> z(this->_N);
 
-        seed(z);
+        this->seed(z);
 
         // Discard initial transient iterates to reach the attractor
-        for (int i = 0; i < 1e2 * this->_init_iter; i++) {
-            F(z);
-            renorm(z);
+        int warmup = 100 * static_cast<int>(this->_init_iter);
+        for (int i = 0; i < warmup; i++) {
+            this->F(z);
+            this->renorm(z);
         }
 
         uint64_t num_steps = (niter + this->_N - 1) / this->_N;
@@ -143,35 +148,36 @@ class FPI : public Image<uint64_t, 1>{
         PBar pbar(niter, 8, this->_label);
 
         for (uint64_t step = 0; step < num_steps; step++) {
-            F(z);
-            renorm(z);
+            this->F(z);
+            this->renorm(z);
 
             // Perturb every 1000 steps to break periodic cycles
             if (this->_add_noise && (step % 1000 == 0) && step > 0) {
-                noise(z);
+                this->noise(z);
                 for (int j = 0; j < this->_init_iter; j++) {
-                    F(z);
-                    renorm(z);
+                    this->F(z);
+                    this->renorm(z);
                 }
             }
 
-            nudge(z);
+            this->nudge(z);
 
             // Accumulate up to _N points; last step may be partial
             uint64_t points = std::min(
                 static_cast<uint64_t>(this->_N), niter - total_accumulated);
-            accumulate(z, points);
+            this->accumulate(z, points);
             total_accumulated += points;
             pbar = total_accumulated;
         }
 
+        this->post_run();
+
         // Copy back for test access via z()
-        Type zfinal = z[0];
-        this->_z = Type(zfinal.real(), zfinal.imag());
+        this->_z = z[0];
     }
 
     // Convenience overload that runs for the default iteration count from Param.
-    void run_fpi() { run_fpi(_param.n_iter); }
+    void run_fpi() { this->run_fpi(this->_param.n_iter); }
 
     // Writes the accumulated histogram to a 16-bit PGM image file.
     //
@@ -183,10 +189,10 @@ class FPI : public Image<uint64_t, 1>{
     //   filename: Output path for the PGM file.
     void write(const std::string& filename) const {
         // Linearly rescale 64-bit histogram to 16-bit range
-        Image<uint16_t, 1> im(_rows, _cols);
+        Image<uint16_t, 1> im(this->_rows, this->_cols);
         uint64_t max = this->max();
-        for (int r = 0; r < _rows; r++) {
-            for (int c = 0; c < _cols; c++) {
+        for (int r = 0; r < this->_rows; r++) {
+            for (int c = 0; c < this->_cols; c++) {
                 im[r][c] = static_cast<uint16_t>(
                     static_cast<double>((*this)[r][c]) / max * __UINT16_MAX__);
             }
@@ -210,9 +216,16 @@ class FPI : public Image<uint64_t, 1>{
     unsigned long long* _d_heatmap = nullptr;  // Device heatmap buffer (GPU only)
 
  private:
+    // Setup/teardown hooks called by run_fpi.  CPU: no-ops.
+    // gpuDouble specializations (FPI.cu) allocate and zero a device-side
+    // heatmap in pre_run, then synchronize, copy it back to _data, and
+    // free it in post_run.
+    void pre_run() {}
+    void post_run() {}
+
     // Seeds _N orbits as roots-of-unity rotations of _z.
     // z[tid] = _z * exp(i * 2*pi*tid / _N).  For _N=1, z[0] = _z exactly.
-    // CPU analog of fpi_seed_kernel.
+    // gpuDouble specialization dispatches to fpi_seed_kernel.
     void seed(Complex<T>& z) {
         for (int tid = 0; tid < this->_N; tid++) {
             double angle = 2.0 * 3.14159265358979323846 * tid / this->_N;
@@ -223,7 +236,7 @@ class FPI : public Image<uint64_t, 1>{
     }
 
     // Rescales orbits that escape |z| > 8 back to radius 3.
-    // CPU analog of fpi_renorm_kernel.
+    // gpuDouble specialization dispatches to fpi_renorm_kernel.
     void renorm(Complex<T>& z) {
         for (int tid = 0; tid < this->_N; tid++) {
             double a = std::abs(z[tid]);
@@ -235,7 +248,7 @@ class FPI : public Image<uint64_t, 1>{
     }
 
     // Contracts orbits by 1% and shifts away from the origin to break
-    // periodic cycles.  CPU analog of fpi_noise_kernel.
+    // periodic cycles.  gpuDouble specialization dispatches to fpi_noise_kernel.
     void noise(Complex<T>& z) {
         for (int tid = 0; tid < this->_N; tid++) {
             z[tid] = Type(z[tid].real()*0.99 - 1e-2*sgn(z[tid].real()),
@@ -244,7 +257,7 @@ class FPI : public Image<uint64_t, 1>{
     }
 
     // Nudges orbits off invariant axes where |Re(z)| or |Im(z)| < 1e-15.
-    // CPU analog of fpi_nudge_kernel.
+    // gpuDouble specialization dispatches to fpi_nudge_kernel.
     void nudge(Complex<T>& z) {
         for (int tid = 0; tid < this->_N; tid++) {
             if (std::abs(z[tid].real()) < 1e-15)
@@ -255,13 +268,13 @@ class FPI : public Image<uint64_t, 1>{
     }
 
     // Maps complex iterates to pixel coordinates and increments the
-    // histogram.  CPU analog of fpi_heatmap_kernel.
+    // histogram.  gpuDouble specialization dispatches to fpi_heatmap_kernel.
     void accumulate(const Complex<T>& z, uint64_t points) {
-        double size = std::sqrt(_rows * _cols);
+        double size = std::sqrt(this->_rows * this->_cols);
         for (uint64_t tid = 0; tid < points; tid++) {
-            int c = floor(_param.scale*size/2*z[tid].real() + _cols/2);
-            int r = floor(_param.scale*size/2*z[tid].imag() + _rows/2);
-            if (r >= 0 && r < _rows && c >= 0 && c < _cols)
+            int c = floor(this->_param.scale*size/2*z[tid].real() + this->_cols/2);
+            int r = floor(this->_param.scale*size/2*z[tid].imag() + this->_rows/2);
+            if (r >= 0 && r < this->_rows && c >= 0 && c < this->_cols)
                 ++(*this)[r][c];
         }
     }
@@ -286,6 +299,12 @@ class FPI : public Image<uint64_t, 1>{
 
 #ifdef CMAKE_CUDA_COMPILER
 template<>
+void FPI<gpuDouble>::pre_run();
+
+template<>
+void FPI<gpuDouble>::post_run();
+
+template<>
 void FPI<gpuDouble>::seed(Complex<gpuDouble>& z);
 
 template<>
@@ -299,7 +318,4 @@ void FPI<gpuDouble>::nudge(Complex<gpuDouble>& z);
 
 template<>
 void FPI<gpuDouble>::accumulate(const Complex<gpuDouble>& z, uint64_t points);
-
-template<>
-void FPI<gpuDouble>::run_fpi(uint64_t niter);
 #endif
