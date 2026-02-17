@@ -49,14 +49,15 @@ __global__ void fpi_nudge_kernel(cuDoubleComplex* z, int N) {
 
 __global__ void fpi_heatmap_kernel(
     const cuDoubleComplex* z, int count,
-    unsigned long long* heatmap, int rows, int cols, double scale) {
+    uint64_t* heatmap, int rows, int cols, double scale) {
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     if (tid >= count) return;
     double size = sqrt((double)(rows * cols));
     int c = (int)floor(scale * size / 2.0 * z[tid].x + cols / 2.0);
     int r = (int)floor(scale * size / 2.0 * z[tid].y + rows / 2.0);
     if (r >= 0 && r < rows && c >= 0 && c < cols) {
-        atomicAdd(&heatmap[r * cols + c], 1ULL);
+        atomicAdd(reinterpret_cast<unsigned long long*>(
+            &heatmap[r * cols + c]), 1ULL);
     }
 }
 
@@ -97,9 +98,9 @@ void FPI<gpuDouble>::nudge(Complex<gpuDouble>& z) {
 // Allocates and zeroes a device-side heatmap buffer before iteration.
 template<>
 void FPI<gpuDouble>::pre_run() {
-    int rows = static_cast<int>(this->_rows);
-    int cols = static_cast<int>(this->_cols);
-    size_t heatmap_bytes = rows * cols * sizeof(unsigned long long);
+    int rows = static_cast<int>(this->rows());
+    int cols = static_cast<int>(this->cols());
+    size_t heatmap_bytes = rows * cols * sizeof(uint64_t);
     cudaMalloc(&_d_heatmap, heatmap_bytes);
     cudaMemset(_d_heatmap, 0, heatmap_bytes);
 }
@@ -108,11 +109,11 @@ void FPI<gpuDouble>::pre_run() {
 // the device buffer.
 template<>
 void FPI<gpuDouble>::post_run() {
-    int rows = static_cast<int>(this->_rows);
-    int cols = static_cast<int>(this->_cols);
-    size_t heatmap_bytes = rows * cols * sizeof(unsigned long long);
+    int rows = static_cast<int>(this->rows());
+    int cols = static_cast<int>(this->cols());
+    size_t heatmap_bytes = rows * cols * sizeof(uint64_t);
     cudaDeviceSynchronize();
-    cudaMemcpy(this->_data, _d_heatmap, heatmap_bytes,
+    cudaMemcpy(this->data(), this->_d_heatmap, heatmap_bytes,
                cudaMemcpyDeviceToHost);
     cudaFree(_d_heatmap);
     _d_heatmap = nullptr;
@@ -125,8 +126,8 @@ void FPI<gpuDouble>::accumulate(const Complex<gpuDouble>& z, uint64_t points) {
     fpi_heatmap_kernel<<<blocks, threads>>>(
         reinterpret_cast<const cuDoubleComplex*>(z.dptr()),
         static_cast<int>(points),
-        _d_heatmap, static_cast<int>(this->_rows),
-        static_cast<int>(this->_cols), this->_param.scale);
+        _d_heatmap, static_cast<int>(this->rows()),
+        static_cast<int>(this->cols()), this->_param.scale);
 }
 
 

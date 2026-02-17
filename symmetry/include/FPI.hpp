@@ -10,11 +10,6 @@
 #include "Param.h"
 #include "PBar.h"
 
-// Default number of parallel orbits per type.
-// GPU uses many more orbits to saturate the hardware.
-template<typename T> struct FPITraits           { static constexpr int N = 256; };
-template<>           struct FPITraits<gpuDouble> { static constexpr int N = 65536; };
-
 // Fixed Point Iteration (FPI) class for generating symmetric chaotic attractors.
 //
 // Iterates a complex-valued map z_{k+1} = F(z_k) and accumulates a histogram
@@ -208,12 +203,22 @@ class FPI : public Image<uint64_t, 1>{
         return (U(0) < val) - (val < U(0));
     }
 
+    // Returns the number of rows in the underlying image
+    const int rows() const { return this->_rows; }
+
+    // Returns the number of cols in the underlying image
+    const int cols() const { return this->_cols; }
+
+    // Returns a pointer to the underlying image data.
+    const void* const data() const { return this->_data; }
+    void* data() { return this->_data; }
+
  protected:
     Type _z;        // Current orbit iterate
     uint64_t _init_iter = 10;     // Transient iterations before accumulation
     bool _add_noise = true;       // Whether to perturb the orbit to break cycles
-    int _N = FPITraits<T>::N;     // Number of parallel orbits
-    unsigned long long* _d_heatmap = nullptr;  // Device heatmap buffer (GPU only)
+    int _N = 65536;               // Number of parallel orbits
+    uint64_t* _d_heatmap = nullptr;             // Device heatmap buffer (GPU only)
 
  private:
     // Setup/teardown hooks called by run_fpi.  CPU: no-ops.
