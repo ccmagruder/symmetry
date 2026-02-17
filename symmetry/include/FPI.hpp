@@ -207,6 +207,7 @@ class FPI : public Image<uint64_t, 1>{
     uint64_t _init_iter = 10;     // Transient iterations before accumulation
     bool _add_noise = true;       // Whether to perturb the orbit to break cycles
     int _N = FPITraits<T>::N;     // Number of parallel orbits
+    unsigned long long* _d_heatmap = nullptr;  // Device heatmap buffer (GPU only)
 
  private:
     // Seeds _N orbits as roots-of-unity rotations of _z.
@@ -284,6 +285,21 @@ class FPI : public Image<uint64_t, 1>{
 };
 
 #ifdef CMAKE_CUDA_COMPILER
+template<>
+void FPI<gpuDouble>::seed(Complex<gpuDouble>& z);
+
+template<>
+void FPI<gpuDouble>::noise(Complex<gpuDouble>& z);
+
+template<>
+void FPI<gpuDouble>::renorm(Complex<gpuDouble>& z);
+
+template<>
+void FPI<gpuDouble>::nudge(Complex<gpuDouble>& z);
+
+template<>
+void FPI<gpuDouble>::accumulate(const Complex<gpuDouble>& z, uint64_t points);
+
 template<>
 void FPI<gpuDouble>::run_fpi(uint64_t niter);
 #endif

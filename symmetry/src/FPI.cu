@@ -1,8 +1,7 @@
-// Copyright 2022 Caleb Magruder
+// Copyright 2026 Caleb Magruder
 
 #include <cuComplex.h>
 #include <cstdint>
-#include <iostream>
 
 #include "FPI.hpp"
 
@@ -55,31 +54,68 @@ __global__ void fpi_heatmap_kernel(
 }
 
 template<>
+void FPI<gpuDouble>::seed(Complex<gpuDouble>& z) {
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    fpi_seed_kernel<<<blocks, threads>>>(
+        reinterpret_cast<cuDoubleComplex*>(z.dptr()), this->_N);
+}
+
+template<>
+void FPI<gpuDouble>::noise(Complex<gpuDouble>& z) {
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    fpi_noise_kernel<<<blocks, threads>>>(
+        reinterpret_cast<cuDoubleComplex*>(z.dptr()), this->_N);
+}
+
+template<>
+void FPI<gpuDouble>::renorm(Complex<gpuDouble>& z) {
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    fpi_renorm_kernel<<<blocks, threads>>>(
+        reinterpret_cast<cuDoubleComplex*>(z.dptr()), this->_N);
+}
+
+template<>
+void FPI<gpuDouble>::nudge(Complex<gpuDouble>& z) {
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    fpi_nudge_kernel<<<blocks, threads>>>(
+        reinterpret_cast<cuDoubleComplex*>(z.dptr()), this->_N);
+}
+
+template<>
+void FPI<gpuDouble>::accumulate(const Complex<gpuDouble>& z, uint64_t points) {
+    int threads = 256;
+    int blocks = (this->_N + threads - 1) / threads;
+    fpi_heatmap_kernel<<<blocks, threads>>>(
+        reinterpret_cast<const cuDoubleComplex*>(z.dptr()),
+        static_cast<int>(points),
+        _d_heatmap, static_cast<int>(this->_rows),
+        static_cast<int>(this->_cols), this->_param.scale);
+}
+
+template<>
 void FPI<gpuDouble>::run_fpi(uint64_t niter) {
     const int N = 65536;
     int rows = static_cast<int>(this->_rows);
     int cols = static_cast<int>(this->_cols);
 
     size_t heatmap_bytes = rows * cols * sizeof(unsigned long long);
-    unsigned long long* d_heatmap = nullptr;
-    cudaMalloc(&d_heatmap, heatmap_bytes);
-    cudaMemset(d_heatmap, 0, heatmap_bytes);
+    cudaMalloc(&_d_heatmap, heatmap_bytes);
+    cudaMemset(_d_heatmap, 0, heatmap_bytes);
 
     Complex<gpuDouble> z(N);
 
-    int threads = 256;
-    int blocks = (N + threads - 1) / threads;
-
     // Seed orbits on a circle
-    fpi_seed_kernel<<<blocks, threads>>>(
-        reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
+    this->seed(z);
 
     // Warmup transient
     int warmup = 100 * static_cast<int>(this->_init_iter);
     for (int i = 0; i < warmup; i++) {
         this->F(z);
-        fpi_renorm_kernel<<<blocks, threads>>>(
-            reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
+        this->renorm(z);
     }
 
     // Main iteration loop
@@ -89,37 +125,31 @@ void FPI<gpuDouble>::run_fpi(uint64_t niter) {
 
     for (uint64_t step = 0; step < num_steps; step++) {
         this->F(z);
-        fpi_renorm_kernel<<<blocks, threads>>>(
-            reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
+        this->renorm(z);
 
         // Noise perturbation every 1000 steps
         if (this->_add_noise && (step % 1000 == 0) && step > 0) {
-            fpi_noise_kernel<<<blocks, threads>>>(
-                reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
+            this->noise(z);
             for (int j = 0; j < this->_init_iter; j++) {
                 this->F(z);
-                fpi_renorm_kernel<<<blocks, threads>>>(
-                    reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
+                this->renorm(z);
             }
         }
 
         // Axis nudge
-        fpi_nudge_kernel<<<blocks, threads>>>(
-            reinterpret_cast<cuDoubleComplex*>(z.dptr()), N);
+        this->nudge(z);
 
         // Heatmap accumulation (only accumulate up to niter total points)
         uint64_t points_this_step = std::min(
             static_cast<uint64_t>(N), niter - total_accumulated);
-        fpi_heatmap_kernel<<<blocks, threads>>>(
-            reinterpret_cast<const cuDoubleComplex*>(z.dptr()),
-            static_cast<int>(points_this_step),
-            d_heatmap, rows, cols, this->_param.scale);
+        this->accumulate(z, points_this_step);
         total_accumulated += points_this_step;
     }
 
     cudaDeviceSynchronize();
 
-    cudaMemcpy(this->_data, d_heatmap, heatmap_bytes,
+    cudaMemcpy(this->_data, _d_heatmap, heatmap_bytes,
                cudaMemcpyDeviceToHost);
-    cudaFree(d_heatmap);
+    cudaFree(_d_heatmap);
+    _d_heatmap = nullptr;
 }
