@@ -22,10 +22,12 @@ target_link_libraries(tParam Symmetry GTest::gtest GTest::gtest_main)
 target_link_libraries(tPixel Symmetry GTest::gtest GTest::gtest_main)
 
 add_executable(bComplex bComplex.cpp)
+add_executable(bFPI bFPI.cpp)
 
 target_link_libraries(bComplex Symmetry benchmark::benchmark benchmark::benchmark_main)
+target_link_libraries(bFPI Symmetry benchmark::benchmark benchmark::benchmark_main)
 
-install(TARGETS bComplex DESTINATION bin)
+install(TARGETS bComplex bFPI DESTINATION bin)
 
 add_subdirectory(config)
 add_subdirectory(images)

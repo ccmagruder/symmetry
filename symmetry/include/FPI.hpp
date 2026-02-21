@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <complex>
+#include <memory>
 #include <string>
 
 #include "Complex.hpp"
@@ -140,7 +140,10 @@ class FPI : public Image<uint64_t, 1>{
 
         uint64_t num_steps = (niter + this->_N - 1) / this->_N;
         uint64_t total_accumulated = 0;
-        PBar pbar(niter, 8, this->_label);
+        std::unique_ptr<PBar> pbar=nullptr;
+        if (this->_enable_pbar) {
+            pbar = std::make_unique<PBar>(niter, 8, this->_label);
+        }
 
         for (uint64_t step = 0; step < num_steps; step++) {
             this->F(z);
@@ -162,7 +165,8 @@ class FPI : public Image<uint64_t, 1>{
                 static_cast<uint64_t>(this->_N), niter - total_accumulated);
             this->accumulate(z, points);
             total_accumulated += points;
-            pbar = total_accumulated;
+            if (pbar)
+                (*pbar) = total_accumulated;
         }
 
         this->post_run();
@@ -216,6 +220,7 @@ class FPI : public Image<uint64_t, 1>{
  protected:
     Type _z;        // Current orbit iterate
     uint64_t _init_iter = 10;     // Transient iterations before accumulation
+    bool _enable_pbar = true;     // Progress bar output flag
     bool _add_noise = true;       // Whether to perturb the orbit to break cycles
     int _N = 65536;               // Number of parallel orbits
     uint64_t* _d_heatmap = nullptr;             // Device heatmap buffer (GPU only)
