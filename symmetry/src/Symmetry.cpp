@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
         std::string filenameConfig = std::string(argv[2]);
         std::string filenameImage = std::string(argv[3]);
         Param p(filenameConfig);
-        FPI im(p, filenameConfig);
+        FPI<cpuDouble> im(p, filenameConfig);
         im.run_fpi();
         im.write(filenameImage);
     } else if (command == "color") {

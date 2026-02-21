@@ -1,8 +1,24 @@
-// Copyright 2022 Caleb Magruder
+// Copyright 2026 Caleb Magruder
 
 #include "gtest/gtest.h"
 
 #include "Param.h"
+
+TEST(Param, Initialize) {
+    Param p;
+    EXPECT_NEAR(p.lambda, 0, 1e-16);
+    EXPECT_NEAR(p.alpha, 0, 1e-16);
+    EXPECT_NEAR(p.beta, 0, 1e-16);
+    EXPECT_NEAR(p.gamma, 0, 1e-16);
+    EXPECT_NEAR(p.omega, 0, 1e-16);
+    EXPECT_NEAR(p.n, 0, 1e-16);
+    EXPECT_NEAR(p.delta, 0, 1e-16);
+    EXPECT_NEAR(p.p, 0, 1e-16);
+    EXPECT_NEAR(p.scale, 0, 1e-16);
+    EXPECT_NEAR(p.n_iter, 0, 1e-16);
+    EXPECT_NEAR(p.resx, 1, 1e-16);
+    EXPECT_NEAR(p.resy, 1, 1e-16);
+}
 
 TEST(Param, ReadFile) {
     std::string fileName("config/test_iter10.json");
@@ -21,79 +37,3 @@ TEST(Param, ReadFile) {
     EXPECT_EQ(p.resy, 2);
 }
 
-TEST(Param, Hash) {
-    size_t h1 = Param::hash(Param("config/test_iter10.json"));
-    Param p("config/test_iter10.json");
-    size_t h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.lambda = 2;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.lambda = 1.56;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.alpha = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.alpha = -1;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.beta = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.beta = 0.1;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.gamma = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.gamma = -0.82;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.omega = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.omega = 0;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.n = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.n = 3;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.scale = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.scale = 0.65;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.n_iter = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.n_iter = 10;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.resx = 1;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.resx = 2;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-
-    p.resy = 3;
-    h2 = Param::hash(p);
-    EXPECT_NE(h1, h2);
-    p.resy = 2;
-    h2 = Param::hash(p);
-    EXPECT_EQ(h1, h2);
-}

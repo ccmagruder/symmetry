@@ -1,5 +1,5 @@
 {
   "build": "[[ -d symmetry/build ]] && rm -rf symmetry/build || true && cmake -G Ninja -B symmetry/build symmetry -DCMAKE_BUILD_TYPE=Release && cmake --build symmetry/build && ctest --test-dir symmetry/build && symmetry/build/tests/bComplex",
   "test": "cmake --build symmetry/build && ctest --test-dir symmetry/build --rerun-failed --output-on-failure && symmetry/build/tests/bComplex",
-  "run": "symmetry/build/tests/bComplex"
+  "run": "symmetry/build/tests/bFPI"
 }
